@@ -1,160 +1,154 @@
 ---
+interface MetaRow {
+  k: string;
+  v: string;
+}
+
+interface RoomProject {
+  id: string;
+  num: string;
+  title: string;
+  desc: string;
+  meta: MetaRow[];
+  folder: string;
+  pages: string[];
+}
+
+const projects: RoomProject[] = [
+  {
+    id: "fluid",
+    num: "01",
+    title: "Fluid Terrain",
+    desc: "A porous gabion landscape built from recycled concrete that slows floodwater and supports seasonal habitation along the creek edge. Elevated structures and terraced ground adapt to shifting water levels across flood and drought cycles.",
+    meta: [
+      { k: "Period", v: "2026 Spring · Columbia GSAPP" },
+      { k: "Location", v: "Santa Paula Creek, Ventura County, CA" },
+      { k: "Program", v: "Hydrological landscape infrastructure" },
+      { k: "Credits", v: "Individual · Instructor Marc Tsurumaki" },
+    ],
+    folder: "fluid-terrain",
+    pages: ["01-fluid-01.jpg", "01-fluid-02.jpg", "01-fluid-03.jpg", "01-fluid-04.jpg", "01-fluid-05.jpg"],
+  },
+  {
+    id: "calibrated",
+    num: "02",
+    title: "Calibrated Environment",
+    desc: "A mixed-use tower organized through daylight analysis, thermal mapping, and occupancy-based program distribution. Environmental performance becomes the framework that calibrates massing, facade, and program across residential, retail, and public floors.",
+    meta: [
+      { k: "Period", v: "2026 Spring · Columbia GSAPP" },
+      { k: "Location", v: "1227 Broadway, New York, NY" },
+      { k: "Program", v: "Mixed-use environmental tower" },
+      { k: "Credits", v: "Team project · Instructor Joseph A. Brennan" },
+      { k: "Role", v: "Environmental analysis, iterative massing studies with Ladybug, facade studies, residential layouts, and Revit documentation." },
+    ],
+    folder: "calibrated-environment",
+    pages: ["02-calibrated-01.jpg", "02-calibrated-02.jpg", "02-calibrated-03.jpg"],
+  },
+  {
+    id: "surreal",
+    num: "03",
+    title: "Surreal Museum Tower",
+    desc: "A vertical museum inserted into the commercial spectacle of Times Square. Exhibition cubes stack into a non-linear sequence that shifts between compression and expansion, reality and dream.",
+    meta: [
+      { k: "Period", v: "2024 · Kookmin University graduate exhibition" },
+      { k: "Location", v: "Times Square, New York, NY" },
+      { k: "Program", v: "Vertical museum prototype" },
+      { k: "Credits", v: "Individual · Sensory Museum honorable mention" },
+    ],
+    folder: "surreal-museum-tower",
+    pages: ["03-surreal-01.jpg", "03-surreal-02.jpg", "03-surreal-03.jpg"],
+  },
+  {
+    id: "shadow",
+    num: "04",
+    title: "Shadow Archive",
+    desc: "A distributed archive in the tundra-boreal transition zone. Moving volumes cast fields of prolonged shade that stabilize thawing ground, turning shadow itself into a preservation strategy.",
+    meta: [
+      { k: "Period", v: "2025 Fall · Columbia GSAPP" },
+      { k: "Location", v: "Churchill, Canada" },
+      { k: "Program", v: "Environmental research archive" },
+      { k: "Credits", v: "With Meng-Syun Sung · Instructor Leslie Gill" },
+    ],
+    folder: "shadow-archive",
+    pages: ["04-shadow-01.jpg", "04-shadow-02.jpg", "04-shadow-03.jpg", "04-shadow-04.jpg"],
+  },
+  {
+    id: "ordinary",
+    num: "05",
+    title: "Ordinary Village: Hide and Seek",
+    desc: "An interactive residential village in Seoul that treats hide-and-seek as a spatial strategy, testing interaction, boundary, and variability across an adaptive domestic environment shared by a community.",
+    meta: [
+      { k: "Year", v: "2022" },
+      { k: "Location", v: "Seoul, South Korea" },
+      { k: "Type", v: "Interactive residential village" },
+      { k: "Focus", v: "Adaptive domestic space" },
+      { k: "Keywords", v: "Interaction · Boundary · Variability · Community" },
+    ],
+    folder: "ordinary-village",
+    pages: ["05-ordinary-01.jpg", "05-ordinary-02.jpg", "05-ordinary-03.jpg"],
+  },
+  {
+    id: "ivanpah",
+    num: "06",
+    title: "Ivanpah Solar Sanctuary",
+    desc: "A minimal architectural intervention in the Mojave Desert that reconsiders solar infrastructure as a site of ecological coexistence, treating the desert as an inhabitant rather than an obstacle.",
+    meta: [
+      { k: "Year", v: "2025" },
+      { k: "Location", v: "Ivanpah Desert, Mojave Desert, CA" },
+      { k: "Type", v: "Ecological energy sanctuary" },
+      { k: "Focus", v: "Minimal desert intervention" },
+      { k: "Keywords", v: "Infrastructure · Coexistence · Ecology · Non-Human" },
+    ],
+    folder: "ivanpah-solar-sanctuary",
+    pages: ["06-ivanpah-01.jpg", "06-ivanpah-02.jpg"],
+  },
+  {
+    id: "spectrum",
+    num: "07",
+    title: "Spectrum Living",
+    desc: "Collective housing that links varied living environments through community bridges. Straight lines and circles organize a gradient from private rooms to shared ground, negotiating privacy and exchange across generations.",
+    meta: [
+      { k: "Period", v: "2023 · RMIT" },
+      { k: "Location", v: "Melbourne, Australia" },
+      { k: "Program", v: "Collective housing prototype" },
+      { k: "Credits", v: "Individual" },
+    ],
+    folder: "spectrum-living",
+    pages: ["07-spectrum-01.jpg", "07-spectrum-02.jpg", "07-spectrum-03.jpg", "07-spectrum-04.jpg"],
+  },
+];
 ---
-<article aria-hidden="true" class="room" id="room-fluid">
+{projects.map((p) => (
+<article aria-hidden="true" class="room" id={`room-${p.id}`}>
 <div class="room-scroll">
 <header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">01 / 07</span>
+<button class="back" onclick="closeRoom()">&larr; Back</button>
+<span class="room-num">{p.num} / 07</span>
 </header>
 <div class="room-body">
-<h2 class="room-title">Fluid Terrain</h2>
-<p class="room-desc">A porous gabion landscape built from recycled concrete that slows floodwater and supports seasonal habitation along the creek edge. Elevated structures and terraced ground adapt to shifting water levels across flood and drought cycles.</p>
+<div class="room-intro">
+<h2 class="room-title">{p.title}</h2>
+<p class="room-desc">{p.desc}</p>
 <div class="dmeta">
-<div class="drow"><span class="dk">Period</span><span>2026 Spring · Columbia GSAPP</span></div>
-<div class="drow"><span class="dk">Location</span><span>Santa Paula Creek, Ventura County, CA</span></div>
-<div class="drow"><span class="dk">Program</span><span>Hydrological landscape infrastructure</span></div>
-<div class="drow"><span class="dk">Credits</span><span>Individual · Instructor Marc Tsurumaki</span></div>
+{p.meta.map((row) => (
+<div class="drow"><span class="dk">{row.k}</span><span>{row.v}</span></div>
+))}
 </div>
-<div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-03.jpg" /></div>
-<div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-01.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-04.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-06.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-08.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-02.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-09.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-05.jpg" /></div><div class="rimg"><img alt="Fluid Terrain" src="/images/fluid-07.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('fluid')">Next project →</button>
+</div>
+<div class="sheets">
+{p.pages.map((file, i) => (
+<figure class="sheet">
+<img
+  alt={`${p.title} — portfolio sheet ${i + 1} of ${p.pages.length}`}
+  decoding="async"
+  loading={i === 0 ? "eager" : "lazy"}
+  src={`/images/portfolio-pages/${p.folder}/${file}`}
+/>
+</figure>
+))}
+</div>
+<button class="nextp" onclick={`nextRoom('${p.id}')`}>Next project &rarr;</button>
 </div>
 </div>
 </article>
-<article aria-hidden="true" class="room" id="room-calibrated">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">02 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Calibrated Environment</h2>
-<p class="room-desc">A mixed-use tower organized through daylight analysis, thermal mapping, and occupancy-based program distribution. Environmental performance becomes the framework that calibrates massing, facade, and program across residential, retail, and public floors.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Period</span><span>2026 Spring · Columbia GSAPP</span></div>
-<div class="drow"><span class="dk">Location</span><span>1227 Broadway, New York, NY</span></div>
-<div class="drow"><span class="dk">Program</span><span>Mixed-use environmental tower</span></div>
-<div class="drow"><span class="dk">Credits</span><span>Team project · Instructor Joseph A. Brennan</span></div>
-<div class="drow"><span class="dk">Role</span><span>Environmental analysis, iterative massing studies with Ladybug, facade studies, residential layouts, and Revit documentation.</span></div>
-</div>
-<div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-01.jpg" /></div>
-<div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-03.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-04.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-02.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-05.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-07.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-06.jpg" /></div><div class="rimg"><img alt="Calibrated Environment" src="/images/calibrated-08.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('calibrated')">Next project →</button>
-</div>
-</div>
-</article>
-<article aria-hidden="true" class="room" id="room-surreal">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">03 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Surreal Museum Tower</h2>
-<p class="room-desc">A vertical museum inserted into the commercial spectacle of Times Square. Exhibition cubes stack into a non-linear sequence that shifts between compression and expansion, reality and dream.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Period</span><span>2024 · Kookmin University graduate exhibition</span></div>
-<div class="drow"><span class="dk">Location</span><span>Times Square, New York, NY</span></div>
-<div class="drow"><span class="dk">Program</span><span>Vertical museum prototype</span></div>
-<div class="drow"><span class="dk">Credits</span><span>Individual · Sensory Museum honorable mention</span></div>
-</div>
-<div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-07.jpg" /></div>
-<div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-04.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-05.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-08.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-06.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-01.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-03.jpg" /></div><div class="rimg"><img alt="Surreal Museum Tower" src="/images/surreal-02.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('surreal')">Next project →</button>
-</div>
-</div>
-</article>
-<article aria-hidden="true" class="room" id="room-shadow">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">04 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Shadow Archive</h2>
-<p class="room-desc">A distributed archive in the tundra-boreal transition zone. Moving volumes cast fields of prolonged shade that stabilize thawing ground, turning shadow itself into a preservation strategy.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Period</span><span>2025 Fall · Columbia GSAPP</span></div>
-<div class="drow"><span class="dk">Location</span><span>Churchill, Canada</span></div>
-<div class="drow"><span class="dk">Program</span><span>Environmental research archive</span></div>
-<div class="drow"><span class="dk">Credits</span><span>With Meng-Syun Sung · Instructor Leslie Gill</span></div>
-</div>
-<div class="rimg"><img alt="Shadow Archive" src="/images/shadow-06.jpg" /></div>
-<div class="rimg"><img alt="Shadow Archive" src="/images/shadow-03.jpg" /></div><div class="rimg"><img alt="Shadow Archive" src="/images/shadow-01.jpg" /></div><div class="rimg"><img alt="Shadow Archive" src="/images/shadow-07.jpg" /></div><div class="rimg"><img alt="Shadow Archive" src="/images/shadow-04.jpg" /></div><div class="rimg"><img alt="Shadow Archive" src="/images/shadow-02.jpg" /></div><div class="rimg"><img alt="Shadow Archive" src="/images/shadow-05.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('shadow')">Next project →</button>
-</div>
-</div>
-</article>
-<article aria-hidden="true" class="room" id="room-ordinary">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">05 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Ordinary Village: Hide and Seek</h2>
-<p class="room-desc">An interactive residential village in Seoul that treats hide-and-seek as a spatial strategy, testing interaction, boundary, and variability across an adaptive domestic environment shared by a community.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Year</span><span>2022</span></div>
-<div class="drow"><span class="dk">Location</span><span>Seoul, South Korea</span></div>
-<div class="drow"><span class="dk">Type</span><span>Interactive residential village</span></div>
-<div class="drow"><span class="dk">Focus</span><span>Adaptive domestic space</span></div>
-<div class="drow"><span class="dk">Keywords</span><span>Interaction · Boundary · Variability · Community</span></div>
-</div>
-<div class="rimg"><img alt="Ordinary Village: Hide and Seek" src="/images/portfolio-pages/ordinary-village/05-ordinary-01.jpg" /></div>
-<div class="rimg"><img alt="Ordinary Village: Hide and Seek" src="/images/portfolio-pages/ordinary-village/05-ordinary-02.jpg" /></div>
-<div class="rimg"><img alt="Ordinary Village: Hide and Seek" src="/images/portfolio-pages/ordinary-village/05-ordinary-03.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('ordinary')">Next project →</button>
-</div>
-</div>
-</article>
-<article aria-hidden="true" class="room" id="room-ivanpah">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">06 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Ivanpah Solar Sanctuary</h2>
-<p class="room-desc">A minimal architectural intervention in the Mojave Desert that reconsiders solar infrastructure as a site of ecological coexistence, treating the desert as an inhabitant rather than an obstacle.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Year</span><span>2025</span></div>
-<div class="drow"><span class="dk">Location</span><span>Ivanpah Desert, Mojave Desert, CA</span></div>
-<div class="drow"><span class="dk">Type</span><span>Ecological energy sanctuary</span></div>
-<div class="drow"><span class="dk">Focus</span><span>Minimal desert intervention</span></div>
-<div class="drow"><span class="dk">Keywords</span><span>Infrastructure · Coexistence · Ecology · Non-Human</span></div>
-</div>
-<div class="rimg"><img alt="Ivanpah Solar Sanctuary" src="/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-01.jpg" /></div>
-<div class="rimg"><img alt="Ivanpah Solar Sanctuary" src="/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-02.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('ivanpah')">Next project →</button>
-</div>
-</div>
-</article>
-<article aria-hidden="true" class="room" id="room-spectrum">
-<div class="room-scroll">
-<header class="room-top">
-<button class="back" onclick="closeRoom()">← Back</button>
-<span class="room-num">07 / 07</span>
-</header>
-<div class="room-body">
-<h2 class="room-title">Spectrum Living</h2>
-<p class="room-desc">Collective housing that links varied living environments through community bridges. Straight lines and circles organize a gradient from private rooms to shared ground, negotiating privacy and exchange across generations.</p>
-<div class="dmeta">
-<div class="drow"><span class="dk">Period</span><span>2023 · RMIT</span></div>
-<div class="drow"><span class="dk">Location</span><span>Melbourne, Australia</span></div>
-<div class="drow"><span class="dk">Program</span><span>Collective housing prototype</span></div>
-<div class="drow"><span class="dk">Credits</span><span>Individual</span></div>
-</div>
-<div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-02.jpg" /></div>
-<div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-04.jpg" /></div><div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-07.jpg" /></div><div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-01.jpg" /></div><div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-06.jpg" /></div><div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-03.jpg" /></div><div class="rimg"><img alt="Spectrum Living" src="/images/spectrum-05.jpg" /></div>
-<p class="room-note">Full documentation available in the PDF portfolio.</p>
-<button class="nextp" onclick="nextRoom('spectrum')">Next project →</button>
-</div>
-</div>
-</article>
+))}
