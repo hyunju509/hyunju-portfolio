@@ -8,8 +8,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 const SPREAD_BREAKPOINT = 900;
 const MAX_RENDER_DPR = 2;
 const THUMB_TARGET_WIDTH = 220;
-const TURN_MS = 560;
-const TURN_ANGLE = 100;
+const TURN_MS = 760;
+const TURN_EASE = 'cubic-bezier(.33,0,.2,1)';
 
 type Spread = number[];
 
@@ -153,6 +153,13 @@ function init() {
     return canvas;
   }
 
+  function attachCanvas(slot: HTMLElement, canvas: HTMLCanvasElement, pageNum: number) {
+    slot.innerHTML = '';
+    slot.setAttribute('role', 'img');
+    slot.setAttribute('aria-label', `Portfolio page ${pageNum}`);
+    slot.appendChild(canvas);
+  }
+
   async function renderPageInto(pageNum: number, slot: HTMLElement, seq: number): Promise<void> {
     if (seq !== renderSeq) return;
     slot.innerHTML = '';
@@ -202,14 +209,28 @@ function init() {
     nextBtn.disabled = index === spreads.length - 1;
   }
 
+  /*
+   * Restrained direct transition: used for mobile single-page nav, Home/End,
+   * Index thumbnail jumps, resize, and any shape-changing boundary (Cover
+   * <-> first spread) where the two-sheet book turn doesn't apply. Never
+   * used for adjacent desktop spread-to-spread navigation.
+   */
   function applyTransition(direction: 1 | -1) {
     if (reduceMotion) return;
-    const offset = direction * 18;
     book.style.transition = 'none';
-    book.style.opacity = '0';
-    book.style.transform = `translateX(${offset}px)`;
-    void book.offsetWidth;
-    book.style.transition = 'opacity 280ms ease-out, transform 280ms ease-out';
+    if (mode === 'single') {
+      const offset = direction * 24;
+      book.style.opacity = '0.92';
+      book.style.transform = `translateX(${offset}px)`;
+      void book.offsetWidth;
+      book.style.transition = 'opacity 360ms ease-out, transform 360ms ease-out';
+    } else {
+      const offset = direction * 14;
+      book.style.opacity = '0';
+      book.style.transform = `translateX(${offset}px)`;
+      void book.offsetWidth;
+      book.style.transition = 'opacity 220ms ease-out, transform 220ms ease-out';
+    }
     book.style.opacity = '1';
     book.style.transform = 'translateX(0)';
   }
@@ -240,7 +261,22 @@ function init() {
     applyTransition(direction);
   }
 
-  /* ---- book page-turn: adjacent ArrowLeft/Right, Prev/Next, click zones (desktop, uniform two-page spreads only) ---- */
+  /*
+   * Book page-turn: adjacent ArrowLeft/Right, Prev/Next, click zones
+   * (desktop, uniform two-page spreads only).
+   *
+   * Front/back-face sheet illusion. Forward example (A|B -> C|D):
+   *   static base:   A stays on the left untouched, D is placed on the
+   *                  right immediately (hidden under the turning sheet).
+   *   turning sheet: front face = outgoing B, back face = incoming C.
+   *                  Rotates -180deg around its left (binding) edge, so
+   *                  it sweeps from the right slot to exactly cover the
+   *                  left slot by the time it settles.
+   *   on settle:     the left slot is swapped from A to C (imperceptible,
+   *                  since the sheet's back face already shows C there)
+   *                  and the temporary sheet is removed.
+   * Backward mirrors this around the right (binding) edge.
+   */
   function setNavLocked(locked: boolean) {
     turning = locked;
     viewer.classList.toggle('turning', locked);
@@ -252,28 +288,44 @@ function init() {
     return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height };
   }
 
-  function cleanupTurn(sheet: HTMLElement | null, stayingLeaf: HTMLElement | null) {
-    if (sheet && sheet.parentElement) sheet.parentElement.removeChild(sheet);
-    if (stayingLeaf) {
-      stayingLeaf.style.transition = '';
-      stayingLeaf.style.opacity = '';
-    }
-  }
-
   async function performPageTurn(delta: 1 | -1, nextIndex: number) {
-    const outgoingLeaf = delta === 1 ? leafB : leafA;
-    const stayingLeaf = delta === 1 ? leafA : leafB;
-    const outgoingCanvas = outgoingLeaf.querySelector('canvas') as HTMLCanvasElement | null;
+    const cur = spreads[currentSpreadIndex];
+    const next = spreads[nextIndex];
+    if (cur.length !== 2 || next.length !== 2) {
+      renderSpread(nextIndex, delta);
+      return;
+    }
 
-    if (!outgoingCanvas) {
+    const turningLeaf = delta === 1 ? leafB : leafA;
+    const staticLeaf = delta === 1 ? leafA : leafB;
+    const frontPageNum = delta === 1 ? cur[1] : cur[0];
+    const backPageNum = delta === 1 ? next[0] : next[1];
+    const turningLeafNewPageNum = delta === 1 ? next[1] : next[0];
+
+    const frontCanvas = turningLeaf.querySelector('canvas') as HTMLCanvasElement | null;
+    if (!frontCanvas) {
       renderSpread(nextIndex, delta);
       return;
     }
 
     setNavLocked(true);
     const seq = ++renderSeq;
+    currentSpreadIndex = nextIndex;
 
-    const r = rectRelativeTo(outgoingCanvas, book);
+    const refRect = leafA.getBoundingClientRect();
+    const targetW = Math.max(1, refRect.width);
+    const targetH = Math.max(1, refRect.height);
+
+    const [backCanvas, turningLeafNewCanvas] = await Promise.all([
+      getOrRenderCanvas(backPageNum, targetW, targetH),
+      getOrRenderCanvas(turningLeafNewPageNum, targetW, targetH),
+    ]);
+    if (seq !== renderSeq || !backCanvas || !turningLeafNewCanvas) {
+      setNavLocked(false);
+      return;
+    }
+
+    const r = rectRelativeTo(frontCanvas, book);
     const sheet = document.createElement('div');
     sheet.className = 'v-turn-sheet';
     sheet.style.top = `${r.top}px`;
@@ -281,37 +333,33 @@ function init() {
     sheet.style.width = `${r.width}px`;
     sheet.style.height = `${r.height}px`;
     sheet.style.transformOrigin = delta === 1 ? 'left center' : 'right center';
-    sheet.appendChild(outgoingCanvas);
-    const shade = document.createElement('div');
-    shade.className = 'v-turn-shade';
-    sheet.appendChild(shade);
+
+    const front = document.createElement('div');
+    front.className = 'v-turn-face v-turn-face-front';
+    front.appendChild(frontCanvas);
+    const frontShade = document.createElement('div');
+    frontShade.className = 'v-turn-shade';
+    front.appendChild(frontShade);
+
+    const back = document.createElement('div');
+    back.className = 'v-turn-face v-turn-face-back';
+    back.appendChild(backCanvas);
+    const backShade = document.createElement('div');
+    backShade.className = 'v-turn-shade';
+    back.appendChild(backShade);
+
+    sheet.appendChild(front);
+    sheet.appendChild(back);
     book.appendChild(sheet);
 
-    stayingLeaf.style.transition = 'none';
-    stayingLeaf.style.opacity = '0';
-    void stayingLeaf.offsetWidth;
-
-    currentSpreadIndex = nextIndex;
-    const spread = spreads[currentSpreadIndex];
-
-    await renderPageInto(spread[0], leafA, seq);
-    if (seq !== renderSeq) {
-      cleanupTurn(sheet, stayingLeaf);
-      setNavLocked(false);
-      return;
-    }
-    await renderPageInto(spread[1], leafB, seq);
-    if (seq !== renderSeq) {
-      cleanupTurn(sheet, stayingLeaf);
-      setNavLocked(false);
-      return;
-    }
+    attachCanvas(turningLeaf, turningLeafNewCanvas, turningLeafNewPageNum);
 
     let settled = false;
     function finish() {
       if (settled) return;
       settled = true;
-      cleanupTurn(sheet, stayingLeaf);
+      attachCanvas(staticLeaf, backCanvas!, backPageNum);
+      if (sheet.parentElement) sheet.parentElement.removeChild(sheet);
       setNavLocked(false);
       if (seq === renderSeq) maintainCache(currentSpreadIndex);
     }
@@ -321,20 +369,12 @@ function init() {
         finish();
         return;
       }
-      stayingLeaf.style.transition = 'opacity 300ms ease-out';
-      stayingLeaf.style.opacity = '1';
-      sheet.style.transition = `transform ${TURN_MS}ms cubic-bezier(.4,0,.2,1)`;
-      void sheet.offsetWidth;
-      sheet.style.transform = `rotateY(${delta === 1 ? -TURN_ANGLE : TURN_ANGLE}deg)`;
-      shade.style.animation = `turnShade ${TURN_MS}ms ease-out`;
+      const anim = delta === 1 ? 'bookTurnForward' : 'bookTurnBackward';
+      sheet.style.animation = `${anim} ${TURN_MS}ms ${TURN_EASE} forwards`;
+      frontShade.style.animation = `turnFold ${TURN_MS}ms ease-out forwards`;
+      backShade.style.animation = `turnFold ${TURN_MS}ms ease-out forwards`;
 
-      sheet.addEventListener(
-        'transitionend',
-        (e) => {
-          if (e.propertyName === 'transform') finish();
-        },
-        { once: true }
-      );
+      sheet.addEventListener('animationend', finish, { once: true });
       window.setTimeout(finish, TURN_MS + 140);
     });
 
