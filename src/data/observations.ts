@@ -255,10 +255,13 @@ export interface FeaturedPlaceImage {
 
 const FEATURED_PLACES_PICKS: { slug: string; seq: number }[] = [
   { slug: "japan", seq: 1 },
-  { slug: "los-angeles", seq: 1 },
-  { slug: "las-vegas", seq: 3 },
-  { slug: "new-york", seq: 1 },
   { slug: "japan", seq: 30 },
+  { slug: "los-angeles", seq: 1 },
+  { slug: "los-angeles", seq: 5 },
+  { slug: "las-vegas", seq: 3 },
+  { slug: "las-vegas", seq: 8 },
+  { slug: "new-york", seq: 1 },
+  { slug: "new-york", seq: 3 },
 ];
 
 export function getFeaturedPlaces(): FeaturedPlaceImage[] {
@@ -271,8 +274,11 @@ export function getFeaturedPlaces(): FeaturedPlaceImage[] {
 
 const FEATURED_IMAGE_STUDY_IDS = [
   "material-experiments-01",
+  "material-experiments-03",
   "material-experiments-04",
+  "material-experiments-05",
   "spatial-images-01",
+  "spatial-images-08",
   "spatial-images-16",
   "spatial-images-25",
 ];
