@@ -1,34 +1,50 @@
 ---
 interface Project {
+  num: string;
   id: string;
   title: string;
+  meta?: string;
   image: string;
-  tags?: string;
+  secondary?: string;
   hasRoom: boolean;
 }
 
 const projects: Project[] = [
-  { id: "calibrated", title: "Calibrated Environment", image: "/images/portfolio-pages/calibrated-environment/02-calibrated-01.jpg", tags: "nyc,tower", hasRoom: true },
-  { id: "fluid", title: "Fluid Terrain", image: "/images/portfolio-pages/fluid-terrain/01-fluid-01.jpg", tags: "landscape", hasRoom: true },
-  { id: "surreal", title: "Surreal Museum Tower", image: "/images/portfolio-pages/surreal-museum-tower/03-surreal-01.jpg", tags: "nyc,museum", hasRoom: true },
-  { id: "shadow", title: "Shadow Archive", image: "/images/portfolio-pages/shadow-archive/04-shadow-01.jpg", tags: "research", hasRoom: true },
-  { id: "spectrum", title: "Spectrum Living", image: "/images/portfolio-pages/spectrum-living/07-spectrum-01.jpg", tags: "housing", hasRoom: true },
-  { id: "ordinary", title: "Ordinary Village", image: "/images/portfolio-pages/ordinary-village/05-ordinary-01.jpg", hasRoom: false },
-  { id: "ivanpah", title: "Ivanpah Solar Sanctuary", image: "/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-01.jpg", hasRoom: false },
+  { num: "01", id: "fluid", title: "Fluid Terrain", meta: "2026 · Landscape Infrastructure", image: "/images/portfolio-pages/fluid-terrain/01-fluid-01.jpg", secondary: "/images/portfolio-pages/fluid-terrain/01-fluid-02.jpg", hasRoom: true },
+  { num: "02", id: "calibrated", title: "Calibrated Environment", meta: "2026 · Mixed-Use Environmental Tower", image: "/images/portfolio-pages/calibrated-environment/02-calibrated-01.jpg", secondary: "/images/portfolio-pages/calibrated-environment/02-calibrated-02.jpg", hasRoom: true },
+  { num: "03", id: "surreal", title: "Surreal Museum Tower", meta: "2024 · Vertical Museum", image: "/images/portfolio-pages/surreal-museum-tower/03-surreal-01.jpg", secondary: "/images/portfolio-pages/surreal-museum-tower/03-surreal-02.jpg", hasRoom: true },
+  { num: "04", id: "shadow", title: "Shadow Archive: Inverse Preserve", meta: "2025 · Environmental Research Archive", image: "/images/portfolio-pages/shadow-archive/04-shadow-01.jpg", secondary: "/images/portfolio-pages/shadow-archive/04-shadow-02.jpg", hasRoom: true },
+  { num: "05", id: "ordinary", title: "Ordinary Village: Hide and Seek", image: "/images/portfolio-pages/ordinary-village/05-ordinary-01.jpg", secondary: "/images/portfolio-pages/ordinary-village/05-ordinary-02.jpg", hasRoom: false },
+  { num: "06", id: "ivanpah", title: "Ivanpah Solar Sanctuary", image: "/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-01.jpg", secondary: "/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-02.jpg", hasRoom: false },
+  { num: "07", id: "spectrum", title: "Spectrum Living", meta: "2023 · Collective Housing", image: "/images/portfolio-pages/spectrum-living/07-spectrum-01.jpg", secondary: "/images/portfolio-pages/spectrum-living/07-spectrum-02.jpg", hasRoom: true },
 ];
 ---
 <main class="work" id="work">
 <div class="selected-grid" id="grid">
 {projects.map((p) => (
   p.hasRoom ? (
-    <figure aria-label={`Open ${p.title}`} class="proj-card item" data-id={p.id} data-tags={p.tags} role="button" tabindex="0">
-      <div class="thumb"><img alt={p.title} loading="lazy" src={p.image} /></div>
-      <figcaption><span class="ct">{p.title}</span></figcaption>
+    <figure aria-label={`Open ${p.title}`} class="proj-card item" data-id={p.id} role="button" tabindex="0">
+      <div class="thumb">
+        <img class="p1" alt={p.title} loading="lazy" src={p.image} />
+        {p.secondary && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={p.secondary} />}
+      </div>
+      <figcaption>
+        <span class="pnum">{p.num}</span>
+        <span class="ct">{p.title}</span>
+        {p.meta && <span class="pmeta">{p.meta}</span>}
+      </figcaption>
     </figure>
   ) : (
     <figure class="proj-card">
-      <div class="thumb"><img alt={p.title} loading="lazy" src={p.image} /></div>
-      <figcaption><span class="ct">{p.title}</span></figcaption>
+      <div class="thumb">
+        <img class="p1" alt={p.title} loading="lazy" src={p.image} />
+        {p.secondary && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={p.secondary} />}
+      </div>
+      <figcaption>
+        <span class="pnum">{p.num}</span>
+        <span class="ct">{p.title}</span>
+        {p.meta && <span class="pmeta">{p.meta}</span>}
+      </figcaption>
     </figure>
   )
 ))}
