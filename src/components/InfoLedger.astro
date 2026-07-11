@@ -1,0 +1,36 @@
+---
+interface Row {
+  key: string;
+  main: string[];
+  detail?: string[];
+}
+
+interface Props {
+  num: string;
+  title: string;
+  rows: Row[];
+}
+
+const { num, title, rows } = Astro.props;
+---
+<section class="info-section">
+<div class="info-sec-head">
+<span class="info-num">{num}</span>
+<h2 class="info-h2">{title}</h2>
+</div>
+<div class="ledger">
+{rows.map((row) => (
+  <div class="ledger-row">
+    <div class="ledger-key">{row.key}</div>
+    <div class="ledger-main">
+      {row.main.map((line, i) => (
+        <span class={i === 0 ? "ledger-main-lead" : "ledger-main-sub"}>{line}</span>
+      ))}
+    </div>
+    <div class="ledger-detail">
+      {row.detail && row.detail.map((line) => <span>{line}</span>)}
+    </div>
+  </div>
+))}
+</div>
+</section>
