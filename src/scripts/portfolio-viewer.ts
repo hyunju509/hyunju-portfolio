@@ -8,6 +8,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 const SPREAD_BREAKPOINT = 900;
 const MAX_RENDER_DPR = 2;
 const THUMB_TARGET_WIDTH = 220;
+const TURN_MS = 560;
+const TURN_ANGLE = 100;
 
 type Spread = number[];
 
@@ -61,6 +63,7 @@ function init() {
   let mode: 'spread' | 'single' = window.innerWidth >= SPREAD_BREAKPOINT ? 'spread' : 'single';
   let spreads: Spread[] = computeSpreads(totalPages, mode);
   let currentSpreadIndex = 0;
+  let turning = false;
 
   interface CanvasEntry {
     canvas: HTMLCanvasElement;
@@ -93,23 +96,16 @@ function init() {
 
   let renderSeq = 0;
 
-  async function renderPageInto(pageNum: number, slot: HTMLElement, seq: number): Promise<void> {
-    if (seq !== renderSeq) return;
-    slot.innerHTML = '';
-    slot.setAttribute('role', 'img');
-    slot.setAttribute('aria-label', `Portfolio page ${pageNum}`);
-
-    if (!pdfDoc) return;
-
-    const rect = slot.getBoundingClientRect();
-    const targetWidth = Math.max(1, rect.width);
-    const targetHeight = Math.max(1, rect.height);
+  async function getOrRenderCanvas(
+    pageNum: number,
+    targetWidth: number,
+    targetHeight: number
+  ): Promise<HTMLCanvasElement | null> {
     const cached = pageCache.get(pageNum);
-
     if (cached && cached.forWidth === Math.round(targetWidth) && cached.forHeight === Math.round(targetHeight)) {
-      slot.appendChild(cached.canvas);
-      return;
+      return cached.canvas;
     }
+    if (!pdfDoc) return null;
 
     const existingTask = renderTasks.get(pageNum);
     if (existingTask) {
@@ -122,7 +118,7 @@ function init() {
       page = await pdfDoc.getPage(pageNum);
     } catch (err) {
       console.error('[portfolio] Failed to load page', pageNum, err);
-      return;
+      return null;
     }
 
     const unscaled = page.getViewport({ scale: 1 });
@@ -139,22 +135,33 @@ function init() {
     canvas.style.height = `${viewport.height / dpr}px`;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) return null;
 
     const task = page.render({ canvasContext: ctx, viewport });
     renderTasks.set(pageNum, task);
     try {
       await task.promise;
     } catch (err: any) {
-      if (err?.name === 'RenderingCancelledException') return;
+      if (err?.name === 'RenderingCancelledException') return null;
       console.error('[portfolio] Render failed for page', pageNum, err);
-      return;
+      return null;
     } finally {
       renderTasks.delete(pageNum);
     }
 
     pageCache.set(pageNum, { canvas, forWidth: Math.round(targetWidth), forHeight: Math.round(targetHeight) });
+    return canvas;
+  }
+
+  async function renderPageInto(pageNum: number, slot: HTMLElement, seq: number): Promise<void> {
     if (seq !== renderSeq) return;
+    slot.innerHTML = '';
+    slot.setAttribute('role', 'img');
+    slot.setAttribute('aria-label', `Portfolio page ${pageNum}`);
+
+    const rect = slot.getBoundingClientRect();
+    const canvas = await getOrRenderCanvas(pageNum, Math.max(1, rect.width), Math.max(1, rect.height));
+    if (!canvas || seq !== renderSeq) return;
     slot.appendChild(canvas);
   }
 
@@ -164,19 +171,52 @@ function init() {
     }
   }
 
+  async function prefetchPage(pageNum: number, referenceSlot: HTMLElement) {
+    if (!pdfDoc || pageCache.has(pageNum)) return;
+    const rect = referenceSlot.getBoundingClientRect();
+    await getOrRenderCanvas(pageNum, Math.max(1, rect.width), Math.max(1, rect.height));
+  }
+
+  function maintainCache(index: number) {
+    const spread = spreads[index];
+    const keep = new Set<number>();
+    spread.forEach((p) => keep.add(p));
+    const prevSpread = spreads[index - 1];
+    const nextSpread = spreads[index + 1];
+    if (prevSpread) prevSpread.forEach((p) => keep.add(p));
+    if (nextSpread) nextSpread.forEach((p) => keep.add(p));
+    pruneCache(keep);
+    if (prevSpread) prevSpread.forEach((p) => prefetchPage(p, leafA));
+    if (nextSpread) nextSpread.forEach((p) => prefetchPage(p, leafA));
+  }
+
+  function updateChrome(index: number) {
+    const spread = spreads[index];
+    const twoPages = spread.length === 2;
+    const first = spread[0];
+    const last = spread[spread.length - 1];
+    countEl.textContent = twoPages
+      ? `${pad(first)}–${pad(last)} / ${pad(totalPages)}`
+      : `${pad(first)} / ${pad(totalPages)}`;
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === spreads.length - 1;
+  }
+
   function applyTransition(direction: 1 | -1) {
     if (reduceMotion) return;
-    const offset = direction * 6;
+    const offset = direction * 18;
     book.style.transition = 'none';
     book.style.opacity = '0';
     book.style.transform = `translateX(${offset}px)`;
     void book.offsetWidth;
-    book.style.transition = 'opacity 260ms ease-out, transform 260ms ease-out';
+    book.style.transition = 'opacity 280ms ease-out, transform 280ms ease-out';
     book.style.opacity = '1';
     book.style.transform = 'translateX(0)';
   }
 
+  /* ---- restrained/direct spread render: Home, End, Index thumbnails, resize, non-adjacent or shape-changing nav ---- */
   async function renderSpread(index: number, direction: 1 | -1 = 1) {
+    if (turning) return;
     const seq = ++renderSeq;
     currentSpreadIndex = Math.max(0, Math.min(spreads.length - 1, index));
     const spread = spreads[currentSpreadIndex];
@@ -186,7 +226,6 @@ function init() {
     book.classList.toggle('spread', isSpreadMode);
     book.classList.toggle('single', !isSpreadMode);
     book.classList.toggle('two', twoPages);
-
     leafB.style.display = twoPages ? '' : 'none';
 
     await renderPageInto(spread[0], leafA, seq);
@@ -196,38 +235,128 @@ function init() {
       if (seq !== renderSeq) return;
     }
 
-    const keep = new Set<number>();
-    spread.forEach((p) => keep.add(p));
-    const prevSpread = spreads[currentSpreadIndex - 1];
-    const nextSpread = spreads[currentSpreadIndex + 1];
-    if (prevSpread) prevSpread.forEach((p) => keep.add(p));
-    if (nextSpread) nextSpread.forEach((p) => keep.add(p));
-    pruneCache(keep);
-
-    if (prevSpread) prevSpread.forEach((p) => prefetchPage(p));
-    if (nextSpread) nextSpread.forEach((p) => prefetchPage(p));
-
-    const first = spread[0];
-    const last = spread[spread.length - 1];
-    countEl.textContent = twoPages
-      ? `${pad(first)}–${pad(last)} / ${pad(totalPages)}`
-      : `${pad(first)} / ${pad(totalPages)}`;
-
-    prevBtn.disabled = currentSpreadIndex === 0;
-    nextBtn.disabled = currentSpreadIndex === spreads.length - 1;
-
+    maintainCache(currentSpreadIndex);
+    updateChrome(currentSpreadIndex);
     applyTransition(direction);
   }
 
-  async function prefetchPage(pageNum: number) {
-    if (!pdfDoc || pageCache.has(pageNum)) return;
-    try {
-      await pdfDoc.getPage(pageNum);
-    } catch (err) {}
+  /* ---- book page-turn: adjacent ArrowLeft/Right, Prev/Next, click zones (desktop, uniform two-page spreads only) ---- */
+  function setNavLocked(locked: boolean) {
+    turning = locked;
+    viewer.classList.toggle('turning', locked);
+  }
+
+  function rectRelativeTo(el: HTMLElement, container: HTMLElement) {
+    const a = el.getBoundingClientRect();
+    const b = container.getBoundingClientRect();
+    return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height };
+  }
+
+  function cleanupTurn(sheet: HTMLElement | null, stayingLeaf: HTMLElement | null) {
+    if (sheet && sheet.parentElement) sheet.parentElement.removeChild(sheet);
+    if (stayingLeaf) {
+      stayingLeaf.style.transition = '';
+      stayingLeaf.style.opacity = '';
+    }
+  }
+
+  async function performPageTurn(delta: 1 | -1, nextIndex: number) {
+    const outgoingLeaf = delta === 1 ? leafB : leafA;
+    const stayingLeaf = delta === 1 ? leafA : leafB;
+    const outgoingCanvas = outgoingLeaf.querySelector('canvas') as HTMLCanvasElement | null;
+
+    if (!outgoingCanvas) {
+      renderSpread(nextIndex, delta);
+      return;
+    }
+
+    setNavLocked(true);
+    const seq = ++renderSeq;
+
+    const r = rectRelativeTo(outgoingCanvas, book);
+    const sheet = document.createElement('div');
+    sheet.className = 'v-turn-sheet';
+    sheet.style.top = `${r.top}px`;
+    sheet.style.left = `${r.left}px`;
+    sheet.style.width = `${r.width}px`;
+    sheet.style.height = `${r.height}px`;
+    sheet.style.transformOrigin = delta === 1 ? 'left center' : 'right center';
+    sheet.appendChild(outgoingCanvas);
+    const shade = document.createElement('div');
+    shade.className = 'v-turn-shade';
+    sheet.appendChild(shade);
+    book.appendChild(sheet);
+
+    stayingLeaf.style.transition = 'none';
+    stayingLeaf.style.opacity = '0';
+    void stayingLeaf.offsetWidth;
+
+    currentSpreadIndex = nextIndex;
+    const spread = spreads[currentSpreadIndex];
+
+    await renderPageInto(spread[0], leafA, seq);
+    if (seq !== renderSeq) {
+      cleanupTurn(sheet, stayingLeaf);
+      setNavLocked(false);
+      return;
+    }
+    await renderPageInto(spread[1], leafB, seq);
+    if (seq !== renderSeq) {
+      cleanupTurn(sheet, stayingLeaf);
+      setNavLocked(false);
+      return;
+    }
+
+    let settled = false;
+    function finish() {
+      if (settled) return;
+      settled = true;
+      cleanupTurn(sheet, stayingLeaf);
+      setNavLocked(false);
+      if (seq === renderSeq) maintainCache(currentSpreadIndex);
+    }
+
+    requestAnimationFrame(() => {
+      if (seq !== renderSeq) {
+        finish();
+        return;
+      }
+      stayingLeaf.style.transition = 'opacity 300ms ease-out';
+      stayingLeaf.style.opacity = '1';
+      sheet.style.transition = `transform ${TURN_MS}ms cubic-bezier(.4,0,.2,1)`;
+      void sheet.offsetWidth;
+      sheet.style.transform = `rotateY(${delta === 1 ? -TURN_ANGLE : TURN_ANGLE}deg)`;
+      shade.style.animation = `turnShade ${TURN_MS}ms ease-out`;
+
+      sheet.addEventListener(
+        'transitionend',
+        (e) => {
+          if (e.propertyName === 'transform') finish();
+        },
+        { once: true }
+      );
+      window.setTimeout(finish, TURN_MS + 140);
+    });
+
+    window.setTimeout(() => {
+      if (seq !== renderSeq) return;
+      updateChrome(currentSpreadIndex);
+    }, Math.round(TURN_MS * 0.55));
   }
 
   function goSpread(delta: 1 | -1) {
-    renderSpread(currentSpreadIndex + delta, delta);
+    if (turning) return;
+    const nextIndex = currentSpreadIndex + delta;
+    if (nextIndex < 0 || nextIndex > spreads.length - 1) return;
+    const uniform =
+      mode === 'spread' &&
+      spreads[currentSpreadIndex].length === 2 &&
+      spreads[nextIndex].length === 2;
+    if (uniform && !reduceMotion) {
+      performPageTurn(delta, nextIndex);
+    } else {
+      renderSpread(nextIndex, delta);
+    }
   }
 
   function isIndexOpen(): boolean {
@@ -235,6 +364,7 @@ function init() {
   }
 
   function openIndex() {
+    if (turning) return;
     indexPanel.classList.add('open');
     indexPanel.setAttribute('aria-hidden', 'false');
     indexCloseBtn.focus();
