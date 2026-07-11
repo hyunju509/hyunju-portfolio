@@ -1,0 +1,398 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import { ARTICLES } from '../../../data/writing';
+
+export function getStaticPaths() {
+  return ARTICLES.map((a, i) => ({
+    params: { slug: a.slug },
+    props: {
+      article: a,
+      prev: i > 0 ? ARTICLES[i - 1] : null,
+      next: i < ARTICLES.length - 1 ? ARTICLES[i + 1] : null,
+    },
+  }));
+}
+
+const { article, prev, next } = Astro.props;
+const anchor = (n: string) => `section-${n}`;
+---
+<BaseLayout title={`${article.title} — Writing — Hyunju Kim`}>
+<Header />
+<main class="wr-article-page">
+
+<article>
+<header class="wr-article-head">
+<p class="wr-eyebrow"><a href="/observations">Observations</a> / <a href="/observations/writing">Writing</a></p>
+<span class="wr-num">{article.number}</span>
+<h1>{article.title}</h1>
+<p class="wr-subtitle">{article.subtitle}</p>
+<p class="wr-meta">{article.type} · {article.institution} · {article.year}</p>
+</header>
+
+{article.isProvisional && (
+  <p class="wr-provisional-note">
+    This article is a provisional scaffold. Section text below stands in for the full essay,
+    pending the source document.
+  </p>
+)}
+
+<div class="wr-intro">
+{article.introduction.map((p: string) => <p>{p}</p>)}
+</div>
+
+{article.externalLink && (
+  <p class="wr-external">
+    <a href={article.externalLink.url} target="_blank" rel="noopener noreferrer">
+      {article.externalLink.label}<span class="sr-only"> (opens in a new tab)</span>
+    </a>
+    <span class="wr-external-credit">{article.externalLink.credit}</span>
+  </p>
+)}
+
+<nav class="wr-toc" aria-label="Table of contents">
+<ol>
+{article.sections.map((s: any) => (
+  <li><a href={`#${anchor(s.number)}`}>{s.number} — {s.heading}</a></li>
+))}
+</ol>
+</nav>
+
+<div class="wr-body">
+{article.sections.map((s: any) => (
+  <section id={anchor(s.number)} class="wr-section">
+    <h2><span class="wr-section-num">{s.number}</span> {s.heading}</h2>
+    {s.subheading && <p class="wr-section-sub">{s.subheading}</p>}
+    {s.body.map((p: string) => <p>{p}</p>)}
+  </section>
+))}
+</div>
+
+{article.references && article.references.length > 0 && (
+  <section class="wr-references">
+    <h2>Selected References</h2>
+    <ul>
+      {article.references.map((r: string) => <li>{r}</li>)}
+    </ul>
+  </section>
+)}
+</article>
+
+<nav class="wr-article-nav" aria-label="Article navigation">
+  <div class="wr-nav-side">
+    {prev && (
+      <a href={`/observations/writing/${prev.slug}`} class="wr-nav-link wr-nav-prev">
+        <span class="wr-nav-label">Previous</span>
+        <span class="wr-nav-title">{prev.title}</span>
+      </a>
+    )}
+  </div>
+  <div class="wr-nav-side wr-nav-side-right">
+    {next && (
+      <a href={`/observations/writing/${next.slug}`} class="wr-nav-link wr-nav-next">
+        <span class="wr-nav-label">Next</span>
+        <span class="wr-nav-title">{next.title}</span>
+      </a>
+    )}
+  </div>
+</nav>
+
+<p class="wr-back"><a href="/observations/writing">&larr; Back to Writing</a></p>
+
+</main>
+<Footer />
+</BaseLayout>
+
+<style>
+.wr-article-page {
+  padding: 120px 5vw 140px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.wr-article-head {
+  margin-bottom: 40px;
+}
+
+.wr-eyebrow {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 24px;
+}
+
+.wr-eyebrow a {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.wr-eyebrow a:hover {
+  color: #111;
+}
+
+.wr-num {
+  display: block;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(0, 0, 0, 0.4);
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wr-article-head h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: clamp(32px, 5vw, 48px);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin-bottom: 14px;
+}
+
+.wr-subtitle {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 10px;
+}
+
+.wr-meta {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.wr-provisional-note {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.5);
+  border-left: 2px solid rgba(0, 0, 0, 0.15);
+  padding: 4px 0 4px 16px;
+  margin-bottom: 40px;
+}
+
+.wr-intro p,
+.wr-section p {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.75;
+  color: #1a1a1a;
+  margin-bottom: 24px;
+}
+
+.wr-intro {
+  margin-bottom: 32px;
+}
+
+.wr-external {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-external a {
+  display: inline-block;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  color: #111;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  margin-right: 14px;
+}
+
+.wr-external a:hover {
+  border-bottom-color: #111;
+}
+
+.wr-external-credit {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 12.5px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.wr-toc {
+  margin-bottom: 56px;
+  padding: 24px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-toc ol {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wr-toc a {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.wr-toc a:hover {
+  color: #111;
+}
+
+.wr-section {
+  margin-bottom: 56px;
+  scroll-margin-top: 80px;
+}
+
+.wr-section h2 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.wr-section-num {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+.wr-section-sub {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+}
+
+.wr-references {
+  margin: 56px 0;
+  padding-top: 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-references h2 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.wr-references ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wr-references li {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.wr-article-nav {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 5vw 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-nav-side {
+  flex: 1 1 0;
+}
+
+.wr-nav-side-right {
+  text-align: right;
+}
+
+.wr-nav-link {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wr-nav-label {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.wr-nav-title {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  color: #111;
+}
+
+.wr-nav-link:hover .wr-nav-title {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.wr-back {
+  max-width: 760px;
+  margin: 32px auto 0;
+  padding: 0 5vw;
+}
+
+.wr-back a {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.wr-back a:hover {
+  color: #111;
+}
+
+a:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .wr-article-page {
+    padding: 100px 6vw 100px;
+  }
+  .wr-article-nav {
+    flex-direction: column;
+    padding: 32px 6vw 0;
+  }
+  .wr-nav-side-right {
+    text-align: left;
+  }
+  .wr-back {
+    padding: 0 6vw;
+  }
+}
+</style>

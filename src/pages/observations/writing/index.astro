@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import { ARTICLES } from '../../../data/writing';
+---
+<BaseLayout title="Writing — Observations — Hyunju Kim">
+<Header />
+<main class="wr-index-page">
+
+<section class="wr-intro">
+<p class="wr-eyebrow"><a href="/observations">Observations</a> / Writing</p>
+<h1>Writing</h1>
+<p class="wr-lede">Writing brings together research essays, interactive data studies, and urban field notes examining how architecture mediates atmosphere, perception, infrastructure, and public life.</p>
+</section>
+
+<section class="wr-list" aria-label="Articles">
+{ARTICLES.map((a) => (
+  <article class="wr-row">
+    <span class="wr-num">{a.number}</span>
+    <div class="wr-row-main">
+      <h2 class="wr-title"><a href={`/observations/writing/${a.slug}`}>{a.title}</a></h2>
+      <p class="wr-subtitle">{a.subtitle}</p>
+      <p class="wr-meta">{a.type} · {a.institution} · {a.year}</p>
+      <p class="wr-summary">{a.summary}</p>
+      <a class="wr-read" href={`/observations/writing/${a.slug}`}>Read <span aria-hidden="true">&rarr;</span></a>
+    </div>
+  </article>
+))}
+</section>
+
+</main>
+<Footer />
+</BaseLayout>
+
+<style>
+.wr-index-page {
+  padding: 120px 4vw 140px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.wr-intro {
+  margin-bottom: 72px;
+}
+
+.wr-eyebrow {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+}
+
+.wr-eyebrow a {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.wr-eyebrow a:hover {
+  color: #111;
+}
+
+.wr-intro h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: clamp(40px, 6vw, 64px);
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.wr-lede {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  max-width: 640px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- editorial index rows ---------- */
+.wr-list {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 24px;
+  padding: 36px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-num {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: rgba(0, 0, 0, 0.4);
+  padding-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wr-title {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.wr-title a {
+  color: #111;
+}
+
+.wr-title a:hover {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.wr-subtitle {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 10px;
+}
+
+.wr-meta {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 18px;
+}
+
+.wr-summary {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.7);
+  max-width: 680px;
+  margin-bottom: 18px;
+}
+
+.wr-read {
+  display: inline-block;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #111;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.wr-read:hover {
+  border-bottom-color: #111;
+}
+
+.wr-read:focus-visible,
+.wr-title a:focus-visible,
+.wr-eyebrow a:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .wr-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 28px 0;
+  }
+  .wr-num {
+    padding-top: 0;
+  }
+}
+</style>
