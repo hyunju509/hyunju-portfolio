@@ -8,14 +8,53 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 const SPREAD_BREAKPOINT = 900;
 const MAX_RENDER_DPR = 2;
 const THUMB_TARGET_WIDTH = 220;
-const TURN_MS = 760;
-const TURN_EASE = 'cubic-bezier(.33,0,.2,1)';
+const TURN_MS = 960;
+const STRIP_COUNT = 12;
+const STRIP_LAG = 0.16;
+const STRIP_LIFT = 5;
+const STRIP_SHADE_PEAK = 0.12;
 
 type Spread = number[];
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+/*
+ * Small cubic-bezier(x1,y1,x2,y2) evaluator so the page-turn's master
+ * progress can be eased in plain JS (Newton-Raphson on the bezier's x
+ * component, then evaluate y) — this lets one coordinated progress value
+ * drive both the master rotation and every strip's curvature in the same
+ * animation frame, instead of letting independent CSS transitions drift
+ * out of sync with each other.
+ */
+function makeBezierEasing(x1: number, y1: number, x2: number, y2: number) {
+  const A = (a1: number, a2: number) => 1 - 3 * a2 + 3 * a1;
+  const B = (a1: number, a2: number) => 3 * a2 - 6 * a1;
+  const C = (a1: number) => 3 * a1;
+  const calc = (t: number, a1: number, a2: number) => ((A(a1, a2) * t + B(a1, a2)) * t + C(a1)) * t;
+  const slope = (t: number, a1: number, a2: number) => 3 * A(a1, a2) * t * t + 2 * B(a1, a2) * t + C(a1);
+  function tForX(x: number): number {
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const dx = calc(t, x1, x2) - x;
+      const s = slope(t, x1, x2);
+      if (Math.abs(s) < 1e-6) break;
+      t -= dx / s;
+    }
+    return clamp01(t);
+  }
+  return (x: number) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    return calc(tForX(x), y1, y2);
+  };
+}
+const turnEase = makeBezierEasing(0.22, 0.75, 0.18, 1);
 
 function computeSpreads(totalPages: number, mode: 'spread' | 'single'): Spread[] {
   if (mode === 'single') {
@@ -64,6 +103,31 @@ function init() {
   let spreads: Spread[] = computeSpreads(totalPages, mode);
   let currentSpreadIndex = 0;
   let turning = false;
+  let canonicalAspect = 1372 / 896;
+
+  /*
+   * One canonical page rectangle, derived from the PDF's own aspect ratio
+   * plus the available viewer box, used for every leaf regardless of how
+   * many pages are currently visible. Previously each leaf sized itself
+   * via flex:1 1 0, so a lone Cover leaf (no sibling to split the row
+   * with) stretched to claim the full row — roughly double a normal
+   * spread page's width. Fixing the leaf to this canonical box removes
+   * that dependency on sibling count entirely.
+   */
+  function applyPageBox() {
+    const stageRect = stage.getBoundingClientRect();
+    const availW = Math.max(1, stageRect.width);
+    const availH = Math.max(1, stageRect.height);
+    const maxSingleW = mode === 'spread' ? availW / 2 : availW;
+    let w = maxSingleW;
+    let h = w / canonicalAspect;
+    if (h > availH) {
+      h = availH;
+      w = h * canonicalAspect;
+    }
+    book.style.setProperty('--page-w', `${Math.floor(w)}px`);
+    book.style.setProperty('--page-h', `${Math.floor(h)}px`);
+  }
 
   interface CanvasEntry {
     canvas: HTMLCanvasElement;
@@ -288,6 +352,122 @@ function init() {
     return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height };
   }
 
+  /*
+   * Slice a narrow vertical region out of an already-rendered page canvas
+   * into its own small canvas, reusing the existing render (no PDF
+   * re-render, no quality loss beyond a plain canvas-to-canvas copy).
+   */
+  function sliceStripCanvas(
+    source: HTMLCanvasElement,
+    index: number,
+    count: number,
+    cssW: number,
+    cssH: number
+  ): HTMLCanvasElement {
+    const srcH = source.height;
+    const sx = Math.round((index / count) * source.width);
+    const sxEnd = Math.round(((index + 1) / count) * source.width);
+    const sw = Math.max(1, sxEnd - sx);
+    const strip = document.createElement('canvas');
+    strip.width = sw;
+    strip.height = srcH;
+    strip.style.width = `${cssW}px`;
+    strip.style.height = `${cssH}px`;
+    const ctx = strip.getContext('2d');
+    if (ctx) ctx.drawImage(source, sx, 0, sw, srcH, 0, 0, sw, srcH);
+    return strip;
+  }
+
+  interface TurnStrip {
+    el: HTMLElement;
+    frontShade: HTMLElement;
+    backShade: HTMLElement;
+    p: number; // normalized distance from the binding edge: 0 = at spine, 1 = outer edge
+  }
+
+  function buildStrips(
+    sheet: HTMLElement,
+    cssW: number,
+    cssH: number,
+    frontSource: HTMLCanvasElement,
+    backSource: HTMLCanvasElement,
+    direction: 1 | -1
+  ): TurnStrip[] {
+    const stripCssW = cssW / STRIP_COUNT;
+    const strips: TurnStrip[] = [];
+    for (let k = 0; k < STRIP_COUNT; k++) {
+      const leftPx = k * stripCssW;
+      const stripEl = document.createElement('div');
+      stripEl.className = 'v-turn-strip';
+      stripEl.style.left = `${leftPx}px`;
+      stripEl.style.width = `${stripCssW}px`;
+      stripEl.style.height = `${cssH}px`;
+      // Every strip pivots around the SAME shared binding axis (the sheet's
+      // own left or right edge), not its own local edge — otherwise
+      // adjacent strips would fan out independently instead of bending
+      // together as one continuous sheet.
+      const pivotX = direction === 1 ? -leftPx : cssW - leftPx;
+      stripEl.style.transformOrigin = `${pivotX}px center`;
+
+      const front = document.createElement('div');
+      front.className = 'v-turn-face v-turn-face-front';
+      front.appendChild(sliceStripCanvas(frontSource, k, STRIP_COUNT, stripCssW, cssH));
+      const frontShade = document.createElement('div');
+      frontShade.className = 'v-turn-shade';
+      front.appendChild(frontShade);
+
+      const back = document.createElement('div');
+      back.className = 'v-turn-face v-turn-face-back';
+      back.appendChild(sliceStripCanvas(backSource, k, STRIP_COUNT, stripCssW, cssH));
+      const backShade = document.createElement('div');
+      backShade.className = 'v-turn-shade';
+      back.appendChild(backShade);
+
+      stripEl.appendChild(front);
+      stripEl.appendChild(back);
+      sheet.appendChild(stripEl);
+
+      const p = direction === 1 ? k / (STRIP_COUNT - 1) : (STRIP_COUNT - 1 - k) / (STRIP_COUNT - 1);
+      strips.push({ el: stripEl, frontShade, backShade, p });
+    }
+    return strips;
+  }
+
+  /*
+   * One master progress value (0..1 over TURN_MS, eased) drives every
+   * strip each frame — each strip reads a slightly time-lagged version of
+   * that same progress (more lag toward the outer edge, shrinking to zero
+   * as the turn completes so every strip converges back to flat at the
+   * end), which is what produces the gentle distributed curve instead of
+   * a rigid flat board swinging on a hinge.
+   */
+  function runTurnAnimation(strips: TurnStrip[], direction: 1 | -1, onDone: () => void, isCancelled: () => boolean) {
+    const start = performance.now();
+    function frame(now: number) {
+      if (isCancelled()) {
+        onDone();
+        return;
+      }
+      const rawT = clamp01((now - start) / TURN_MS);
+      for (const s of strips) {
+        const laggedT = clamp01(rawT - STRIP_LAG * s.p * (1 - rawT));
+        const eased = turnEase(laggedT);
+        const angle = direction === 1 ? -180 * eased : 180 * eased;
+        const lift = Math.sin(eased * Math.PI) * STRIP_LIFT * (0.5 + 0.5 * s.p);
+        s.el.style.transform = `rotateY(${angle}deg) translateZ(${lift}px)`;
+        const shade = Math.sin(eased * Math.PI) * STRIP_SHADE_PEAK;
+        s.frontShade.style.opacity = String(shade);
+        s.backShade.style.opacity = String(shade);
+      }
+      if (rawT < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        onDone();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
   async function performPageTurn(delta: 1 | -1, nextIndex: number) {
     const cur = spreads[currentSpreadIndex];
     const next = spreads[nextIndex];
@@ -298,7 +478,6 @@ function init() {
 
     const turningLeaf = delta === 1 ? leafB : leafA;
     const staticLeaf = delta === 1 ? leafA : leafB;
-    const frontPageNum = delta === 1 ? cur[1] : cur[0];
     const backPageNum = delta === 1 ? next[0] : next[1];
     const turningLeafNewPageNum = delta === 1 ? next[1] : next[0];
 
@@ -332,27 +511,11 @@ function init() {
     sheet.style.left = `${r.left}px`;
     sheet.style.width = `${r.width}px`;
     sheet.style.height = `${r.height}px`;
-    sheet.style.transformOrigin = delta === 1 ? 'left center' : 'right center';
-
-    const front = document.createElement('div');
-    front.className = 'v-turn-face v-turn-face-front';
-    front.appendChild(frontCanvas);
-    const frontShade = document.createElement('div');
-    frontShade.className = 'v-turn-shade';
-    front.appendChild(frontShade);
-
-    const back = document.createElement('div');
-    back.className = 'v-turn-face v-turn-face-back';
-    back.appendChild(backCanvas);
-    const backShade = document.createElement('div');
-    backShade.className = 'v-turn-shade';
-    back.appendChild(backShade);
-
-    sheet.appendChild(front);
-    sheet.appendChild(back);
     book.appendChild(sheet);
 
     attachCanvas(turningLeaf, turningLeafNewCanvas, turningLeafNewPageNum);
+
+    const strips = buildStrips(sheet, r.width, r.height, frontCanvas, backCanvas, delta);
 
     let settled = false;
     function finish() {
@@ -369,13 +532,8 @@ function init() {
         finish();
         return;
       }
-      const anim = delta === 1 ? 'bookTurnForward' : 'bookTurnBackward';
-      sheet.style.animation = `${anim} ${TURN_MS}ms ${TURN_EASE} forwards`;
-      frontShade.style.animation = `turnFold ${TURN_MS}ms ease-out forwards`;
-      backShade.style.animation = `turnFold ${TURN_MS}ms ease-out forwards`;
-
-      sheet.addEventListener('animationend', finish, { once: true });
-      window.setTimeout(finish, TURN_MS + 140);
+      runTurnAnimation(strips, delta, finish, () => seq !== renderSeq);
+      window.setTimeout(finish, TURN_MS + 500);
     });
 
     window.setTimeout(() => {
@@ -472,9 +630,11 @@ function init() {
       mode = nextMode;
       spreads = computeSpreads(totalPages, mode);
       pageCache.clear();
+      applyPageBox();
       renderSpread(spreadIndexForPage(leadPage), 1);
     } else {
       pageCache.clear();
+      applyPageBox();
       renderSpread(currentSpreadIndex, 1);
     }
   }
@@ -526,9 +686,17 @@ function init() {
 
   pdfjsLib
     .getDocument(pdfSrc)
-    .promise.then((doc) => {
+    .promise.then(async (doc) => {
       pdfDoc = doc;
       totalPages = doc.numPages;
+      try {
+        const page1 = await doc.getPage(1);
+        const vp = page1.getViewport({ scale: 1 });
+        canonicalAspect = vp.width / vp.height;
+      } catch (err) {
+        console.error('[portfolio] Failed to read page 1 dimensions:', err);
+      }
+      applyPageBox();
       spreads = computeSpreads(totalPages, mode);
       renderSpread(0, 1);
     })

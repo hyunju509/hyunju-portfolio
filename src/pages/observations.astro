@@ -1,0 +1,349 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { OBSERVATION_LOCATIONS } from '../data/observations';
+
+const EAGER_COUNT = 8; // covers the widest first-row column count (7) plus one
+let renderedIndex = 0;
+---
+<BaseLayout title="Observations — Hyunju Kim">
+<Header />
+<main class="observations-page">
+
+<section class="observations-intro">
+<h1>Observations</h1>
+<p>Photographs, places, and image studies gathered through living, studying, traveling, and making.</p>
+</section>
+
+<section class="observations-section" id="obs-places">
+<h2>Places</h2>
+<p>Photographs from cities lived in, studied in, and visited.</p>
+
+<div class="obs-filters" role="group" aria-label="Filter photographs by location">
+  <button class="obs-filter" data-slug="all" aria-pressed="true" type="button">All</button>
+  {OBSERVATION_LOCATIONS.map((loc) => (
+    <button class="obs-filter" data-slug={loc.slug} aria-pressed="false" type="button">{loc.title}</button>
+  ))}
+</div>
+
+<div class="obs-grid">
+{OBSERVATION_LOCATIONS.flatMap((loc) =>
+  loc.images.map((img) => {
+    const eager = renderedIndex < EAGER_COUNT;
+    renderedIndex++;
+    return (
+      <button
+        class="obs-tile"
+        type="button"
+        data-slug={loc.slug}
+        data-full={img.full}
+        data-title={loc.title}
+        data-seq={img.seq}
+        data-count={loc.imageCount}
+        data-width={img.width}
+        data-height={img.height}
+        aria-label={`Open photograph ${img.seq} from ${loc.title}`}
+      >
+        <img
+          src={img.thumb}
+          alt=""
+          width="600"
+          height="600"
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      </button>
+    );
+  })
+)}
+</div>
+</section>
+
+<section class="observations-section observations-writing">
+<h2>Writing</h2>
+<p>Research essays, interactive data studies, and urban field notes.</p>
+<a class="obs-writing-link" href="/observations/writing">Read Writing <span aria-hidden="true">&rarr;</span></a>
+</section>
+
+<section class="observations-section">
+<h2>Image Studies</h2>
+<p>Rendering, material, and AI assisted experiments in architectural representation.</p>
+</section>
+
+</main>
+<Footer />
+
+<div class="obs-viewer" id="obs-viewer" hidden role="dialog" aria-modal="true" aria-label="Photograph viewer">
+  <button class="obs-viewer-close" type="button" aria-label="Close photograph viewer">Close</button>
+  <button class="obs-viewer-prev" type="button" aria-label="Previous photograph">&larr;</button>
+  <div class="obs-viewer-frame">
+    <img alt="" />
+  </div>
+  <button class="obs-viewer-next" type="button" aria-label="Next photograph">&rarr;</button>
+  <p class="obs-viewer-caption" aria-live="polite"></p>
+</div>
+
+</BaseLayout>
+
+<script>
+  import '../scripts/observations-gallery';
+</script>
+
+<style>
+.observations-page {
+  padding: 120px 4vw;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.observations-intro {
+  margin-bottom: 80px;
+}
+
+.observations-intro h1,
+.observations-section h2 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+
+.observations-intro h1 {
+  font-size: clamp(40px, 6vw, 64px);
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+
+.observations-intro p {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  max-width: 600px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.observations-section {
+  margin-bottom: 60px;
+}
+
+.observations-section h2 {
+  font-size: clamp(20px, 2.2vw, 26px);
+  margin-bottom: 12px;
+}
+
+.observations-section p {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.obs-writing-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: #111;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.obs-writing-link:hover {
+  border-bottom-color: #111;
+}
+
+.obs-writing-link:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
+/* ---------- location filter ---------- */
+.obs-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 28px 0 32px;
+}
+
+.obs-filter {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: rgba(0, 0, 0, 0.5);
+  padding: 2px 0;
+  border-bottom: 1px solid transparent;
+}
+
+.obs-filter:hover {
+  color: #111;
+}
+
+.obs-filter[aria-pressed="true"] {
+  color: #111;
+  border-bottom-color: #111;
+}
+
+.obs-filter:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
+/* ---------- square contact-sheet grid ---------- */
+.obs-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 1600px) {
+  .obs-grid { grid-template-columns: repeat(7, 1fr); }
+}
+@media (max-width: 1024px) {
+  .obs-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+}
+@media (max-width: 640px) {
+  .obs-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+}
+
+.obs-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f2f2ee;
+  padding: 0;
+  border: none;
+}
+
+.obs-tile[hidden] { display: none; }
+
+.obs-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s ease-out;
+}
+
+.obs-tile:hover img,
+.obs-tile:focus-visible img {
+  opacity: 0.85;
+}
+
+.obs-tile:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+
+/* ---------- full-image viewer ---------- */
+.obs-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: #fafaf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 5vw 48px;
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+.obs-viewer.open { opacity: 1; }
+.obs-viewer[hidden] { display: none; }
+
+.obs-viewer-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.obs-viewer-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.obs-viewer-close,
+.obs-viewer-prev,
+.obs-viewer-next {
+  position: absolute;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  color: rgba(0, 0, 0, 0.55);
+  z-index: 2;
+}
+
+.obs-viewer-close {
+  top: 20px;
+  right: 5vw;
+}
+
+.obs-viewer-prev,
+.obs-viewer-next {
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.obs-viewer-prev { left: 1vw; }
+.obs-viewer-next { right: 1vw; }
+
+.obs-viewer-close:hover,
+.obs-viewer-prev:hover,
+.obs-viewer-next:hover {
+  color: #111;
+}
+
+.obs-viewer-close:focus-visible,
+.obs-viewer-prev:focus-visible,
+.obs-viewer-next:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+}
+
+.obs-viewer-prev:disabled,
+.obs-viewer-next:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.obs-viewer-caption {
+  margin-top: 18px;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+:global(body.obs-viewer-lock) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  overflow-y: scroll;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obs-viewer { transition: none; }
+  .obs-tile img { transition: none; }
+}
+</style>

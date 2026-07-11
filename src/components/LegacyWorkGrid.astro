@@ -1,57 +1,19 @@
 ---
-import { PROJECTS, pad, cardImage, cardSecondary, sheetPath } from '../data/projects';
+import { PROJECTS } from '../data/projects';
+import GridItem from './GridItem.astro';
+
+const tierA = PROJECTS.filter((p) => p.tier === 'A');
+const tierB = PROJECTS.filter((p) => p.tier === 'B');
 ---
 <main class="work" id="work">
 <div class="selected-grid" id="grid">
-{PROJECTS.map((p, i) => (
-  <article class="gitem" data-id={p.id} data-index={i}>
-    <figure aria-expanded="false" aria-label={`Expand ${p.title} project`} class="proj-card" data-id={p.id} role="button" tabindex="0">
-      <div class="thumb">
-        <img class="p1" alt={p.title} loading="lazy" src={cardImage(p)} />
-        {cardSecondary(p) && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={cardSecondary(p)} />}
-      </div>
-      <figcaption>
-        <span class="pnum">{pad(i + 1)}</span>
-        <span class="ct">{p.title}</span>
-        <span class="pmeta">{p.cardMeta}</span>
-      </figcaption>
-    </figure>
-    <div class="gx" hidden tabindex="-1" aria-label={`${p.title} — expanded project`}>
-      <aside class="gx-rail">
-        <span class="gx-num">{pad(i + 1)}</span>
-        <h2 class="gx-title">{p.title}</h2>
-        <p class="gx-mmeta">{p.cardMeta}</p>
-        <dl class="gx-meta">
-        {p.meta.map((row) => (
-          <div><dt>{row.k}</dt><dd>{row.v}</dd></div>
-        ))}
-        </dl>
-        <button class="gx-close" aria-label={`Close ${p.title}`}>&larr; Close</button>
-      </aside>
-      <div class="gx-field">
-        <div class="gx-media">
-          <div class="gx-track">
-          {p.sheets.map((file, j) => (
-            <figure class="gx-page">
-              <img
-                alt={`${p.title} — sheet ${j + 1} of ${p.sheets.length}`}
-                decoding="async"
-                height="896"
-                loading="lazy"
-                src={sheetPath(p, file)}
-                width="1372"
-              />
-            </figure>
-          ))}
-          </div>
-          <button aria-label={`Previous ${p.title} page`} class="gx-zone gx-prev"></button>
-          <button aria-label={`Next ${p.title} page`} class="gx-zone gx-next"></button>
-        </div>
-        <p aria-live="polite" class="gx-count"></p>
-      </div>
-    </div>
-  </article>
-))}
+{tierA.map((p, i) => <GridItem p={p} i={i} />)}
+{tierB.length > 0 && (
+  <div class="more-work-heading" role="presentation">
+    <span>More Work</span>
+  </div>
+)}
+{tierB.map((p, i) => <GridItem p={p} i={tierA.length + i} />)}
 </div>
 <div aria-hidden="true" class="gx-ghost" id="gx-ghost"><img alt="" /></div>
 </main>

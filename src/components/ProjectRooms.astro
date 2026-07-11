@@ -1,5 +1,6 @@
 ---
 import { PROJECTS, pad, sheetPath } from '../data/projects';
+import YouTubePlayer from './YouTubePlayer.astro';
 ---
 {PROJECTS.map((p, i) => (
 <article aria-hidden="true" class="room" id={`room-${p.id}`}>
@@ -30,6 +31,7 @@ import { PROJECTS, pad, sheetPath } from '../data/projects';
 </figure>
 ))}
 </div>
+{p.video && <YouTubePlayer videoId={p.video.youtubeId} title={p.video.title} poster={p.video.poster} />}
 <button class="nextp" onclick={`nextRoom('${p.id}')`}>Next project &rarr;</button>
 </div>
 </div>

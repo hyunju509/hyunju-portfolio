@@ -1,0 +1,164 @@
+---
+interface Props {
+  videoId: string;
+  title: string;
+  poster: string;
+}
+
+const { videoId, title, poster } = Astro.props;
+const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+---
+
+<div class="video-block">
+  <p class="video-label">Research Film</p>
+  <button class="video-poster" data-video-id={videoId} data-embed-url={embedUrl} data-poster={poster}>
+    <img src={poster} alt={title} loading="lazy" />
+    <span class="video-play-button" aria-hidden="true"></span>
+  </button>
+  <p class="video-title">{title}</p>
+</div>
+
+<script>
+function initVideoPlayers() {
+  const posters = document.querySelectorAll<HTMLButtonElement>('.video-poster');
+
+  posters.forEach(poster => {
+    poster.addEventListener('click', () => {
+      const videoId = poster.dataset.videoId;
+      const embedUrl = poster.dataset.embedUrl;
+
+      poster.replaceWith(createIframe(embedUrl));
+    });
+  });
+}
+
+function createIframe(embedUrl: string): HTMLIFrameElement {
+  const iframe = document.createElement('iframe');
+  iframe.src = embedUrl;
+  iframe.title = 'Final Mirrors in the Desert';
+  iframe.allowFullscreen = true;
+  iframe.loading = 'lazy';
+  iframe.className = 'video-iframe';
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+  return iframe;
+}
+
+// Handle cleanup when project room closes
+const originalCloseRoom = (window as any).closeRoom;
+if (originalCloseRoom) {
+  (window as any).closeRoom = function() {
+    // Stop all videos before closing
+    const iframes = document.querySelectorAll<HTMLIFrameElement>('.video-iframe');
+    iframes.forEach(iframe => {
+      const poster = iframe.previousElementSibling as HTMLButtonElement;
+      if (!poster) {
+        iframe.replaceWith(recreatePoster(iframe));
+      }
+    });
+    originalCloseRoom.apply(this, arguments);
+  };
+}
+
+function recreatePoster(iframe: HTMLIFrameElement): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.className = 'video-poster';
+  const embedUrl = iframe.src;
+  button.dataset.embedUrl = embedUrl;
+  button.innerHTML = `<img src="${iframe.dataset.poster || ''}" alt="" loading="lazy" /><span class="video-play-button" aria-hidden="true"></span>`;
+  button.addEventListener('click', () => {
+    button.replaceWith(iframe);
+  });
+  return button;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initVideoPlayers);
+} else {
+  initVideoPlayers();
+}
+</script>
+
+<style>
+.video-block {
+  margin: 60px 0;
+}
+
+.video-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.video-poster {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  padding: 0;
+  margin-bottom: 16px;
+  cursor: pointer;
+  background: transparent;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.video-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.video-play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.video-play-button::after {
+  content: '▶';
+  font-size: 24px;
+  color: #000;
+  margin-left: 4px;
+}
+
+.video-poster:hover .video-play-button {
+  opacity: 1;
+}
+
+.video-poster:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.video-iframe {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: none;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.video-title {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.7);
+  margin: 0;
+}
+</style>

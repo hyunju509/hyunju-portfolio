@@ -21,3 +21,17 @@ pnpm-debug.log*
 .DS_Store
 .vscode/*
 !.vscode/launch.json
+.claude/
+
+# asset workflow
+_asset-inbox/
+_asset-organized/
+_asset-tools/
+public/_asset-review-thumbs/
+
+# observations photo workflow
+_observations-inbox/
+_observations-organized/
+
+# writing workflow
+_writing-inbox/

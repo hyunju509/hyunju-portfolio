@@ -1,0 +1,66 @@
+---
+interface AwardRow {
+  key: string;
+  title: string;
+  detail: string;
+  url?: string;
+  external?: boolean;
+}
+
+interface Props {
+  num: string;
+  rows: AwardRow[];
+}
+
+const { num, rows } = Astro.props;
+---
+<section class="info-section">
+<div class="info-sec-head">
+<span class="info-num">{num}</span>
+<h2 class="info-h2">Awards &amp; Exhibitions</h2>
+</div>
+<div class="ledger">
+{rows.map((row) => (
+  <div class="ledger-row">
+    <div class="ledger-key">{row.key}</div>
+    <div class="ledger-main">
+      {row.url ? (
+        <a href={row.url} target="_blank" rel="noopener noreferrer" class="award-link">
+          <span class="ledger-main-lead">{row.title}</span>
+          {row.external && <span aria-hidden="true" class="award-arrow">↗</span>}
+        </a>
+      ) : (
+        <span class="ledger-main-lead">{row.title}</span>
+      )}
+    </div>
+    <div class="ledger-detail">
+      <span>{row.detail}</span>
+    </div>
+  </div>
+))}
+</div>
+</section>
+
+<style>
+.award-link {
+  display: inline;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+}
+
+.award-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.award-link:hover {
+  text-decoration: underline;
+}
+
+.award-arrow {
+  margin-left: 0.25em;
+  font-size: 0.85em;
+  vertical-align: 0.1em;
+}
+</style>

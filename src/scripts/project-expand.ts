@@ -13,8 +13,8 @@
  * every frame.
  */
 
-const FLIGHT_MS = 640;
-const SIB_MS = 640;
+const FLIGHT_MS = 820;
+const SIB_MS = 820;
 const META_MS = 360;
 const META_DELAY_MS = 180;
 const CROSSFADE_MS = 180;
@@ -179,33 +179,45 @@ function init() {
     const sibFirst = new Map<number, DOMRect>();
     if (!reduce) items.forEach((it, j) => sibFirst.set(j, it.getBoundingClientRect()));
 
-    /* TOGGLE — one reflow */
+    /* Suppress native scroll anchoring for the duration of the transition:
+       expanding this item to grid-column:1/-1 can push it onto a fresh row,
+       shifting its own top edge, which the browser would otherwise try to
+       compensate for by adjusting scrollTop on its own. */
+    grid.classList.add('gx-transitioning');
+
+    /* TOGGLE — one reflow. No scrollIntoView, no window.scrollTo: the
+       viewport must not move during this transition. */
     items[i].classList.add('open');
     exps[i].hidden = false;
     cards[i].setAttribute('aria-expanded', 'true');
     applyPage(i, false);
     open = i;
 
-    items[i].scrollIntoView({ block: 'nearest', behavior: 'auto' });
-
     if (reduce) {
       medias[i].style.opacity = '1';
       revealMeta(i, true);
       busy = false;
+      grid.classList.remove('gx-transitioning');
       exps[i].focus({ preventScroll: true });
       return;
     }
 
-    /* LAST + PLAY, batched in one frame */
-    flipSiblings(sibFirst, i, -1);
-    const destImg = pages[i][state[i]].querySelector('img')!;
-    const lastRect = destImg.getBoundingClientRect();
-    flipGhost(cardImg.currentSrc || cardImg.src, firstRect, lastRect, medias[i], () => {
-      busy = false;
-    });
-
-    window.setTimeout(() => revealMeta(i, true), META_DELAY_MS - 20);
     exps[i].focus({ preventScroll: true });
+
+    /* Let the reflowed layout settle and paint before reading LAST
+       geometry — layout write, rAF, geometry read, rAF, animation start. */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flipSiblings(sibFirst, i, -1);
+        const destImg = pages[i][state[i]].querySelector('img')!;
+        const lastRect = destImg.getBoundingClientRect();
+        flipGhost(cardImg.currentSrc || cardImg.src, firstRect, lastRect, medias[i], () => {
+          busy = false;
+          grid.classList.remove('gx-transitioning');
+        });
+        window.setTimeout(() => revealMeta(i, true), META_DELAY_MS - 20);
+      });
+    });
   }
 
   function closeProject(prev: number) {
@@ -228,27 +240,33 @@ function init() {
     const src = mediaImg.currentSrc || mediaImg.src;
 
     window.setTimeout(() => {
+      grid.classList.add('gx-transitioning');
       const sibFirst = new Map<number, DOMRect>();
       items.forEach((it, j) => sibFirst.set(j, it.getBoundingClientRect()));
 
-      /* TOGGLE — one reflow */
+      /* TOGGLE — one reflow. No scrollIntoView, no window.scrollTo. */
       items[prev].classList.remove('open');
       exps[prev].hidden = true;
       cards[prev].setAttribute('aria-expanded', 'false');
       open = -1;
 
-      flipSiblings(sibFirst, prev, -1);
-      const cardImg = cards[prev].querySelector<HTMLImageElement>('img.p1')!;
-      const lastRect = cardImg.getBoundingClientRect();
-      const cardFigure = cards[prev];
-      cardFigure.style.opacity = '0';
-      flipGhost(src, firstRect, lastRect, cardFigure, () => {
-        cardFigure.style.opacity = '';
-        medias[prev].style.opacity = '';
-        busy = false;
-      });
-
       cards[prev].focus({ preventScroll: true });
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          flipSiblings(sibFirst, prev, -1);
+          const cardImg = cards[prev].querySelector<HTMLImageElement>('img.p1')!;
+          const lastRect = cardImg.getBoundingClientRect();
+          const cardFigure = cards[prev];
+          cardFigure.style.opacity = '0';
+          flipGhost(src, firstRect, lastRect, cardFigure, () => {
+            cardFigure.style.opacity = '';
+            medias[prev].style.opacity = '';
+            busy = false;
+            grid.classList.remove('gx-transitioning');
+          });
+        });
+      });
     }, CLOSE_META_MS);
   }
 
@@ -266,7 +284,7 @@ function init() {
           busy = true;
           openProject(i);
         },
-        reduceMotion() ? 0 : CLOSE_META_MS + FLIGHT_MS + 60
+        reduceMotion() ? 0 : CLOSE_META_MS + FLIGHT_MS + 90
       );
       return;
     }
