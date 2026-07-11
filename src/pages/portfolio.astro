@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const PDF_PUBLIC_PATH = '/documents/Hyunju_Kim_Portfolio.pdf';
+const pdfFsPath = path.resolve('public/documents/Hyunju_Kim_Portfolio.pdf');
+
+let totalPages = 0;
+let loadError: string | null = null;
+
+try {
+  const data = fs.readFileSync(pdfFsPath);
+  const doc = await getDocument({ data: new Uint8Array(data), isEvalSupported: false }).promise;
+  totalPages = doc.numPages;
+} catch (err) {
+  loadError = err instanceof Error ? err.message : 'Unknown error loading the portfolio PDF.';
+  console.error('[portfolio] Failed to read PDF at build time:', err);
+}
+
+const pageIndices = Array.from({ length: totalPages }, (_, i) => i + 1);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+<BaseLayout title="Portfolio — Hyunju Kim">
+
+{loadError && (
+<main class="v-error">
+<p>The portfolio PDF could not be loaded.</p>
+<a href="/">&larr; Back to site</a>
+</main>
+)}
+
+{!loadError && (
+<div class="viewer" id="viewer" data-pdf-src={PDF_PUBLIC_PATH} data-total-pages={totalPages}>
+
+<header class="v-top">
+<button aria-label="Return to site" class="v-back" id="v-back">&larr; Back</button>
+<span class="v-chapter" id="v-chapter">Portfolio</span>
+<span aria-live="polite" class="v-count" id="v-count">{`01 / ${pad(totalPages)}`}</span>
+</header>
+
+<div class="v-stage" id="v-stage">
+<button aria-label="Previous portfolio spread" class="v-zone v-zone-prev" id="v-zone-prev"></button>
+<button aria-label="Next portfolio spread" class="v-zone v-zone-next" id="v-zone-next"></button>
+<div class="v-book" id="v-book">
+<div class="v-leaf" id="v-leaf-a"></div>
+<div class="v-leaf" id="v-leaf-b"></div>
+</div>
+</div>
+
+<footer class="v-bottom">
+<button aria-label="Previous portfolio spread" disabled id="v-prev">&larr; Previous</button>
+<button aria-label="Open portfolio index" id="v-index-btn">Index</button>
+<button aria-label="Next portfolio spread" id="v-next">Next &rarr;</button>
+</footer>
+
+</div>
+
+<div aria-hidden="true" class="v-index" id="v-index">
+<div class="v-index-top">
+<span>Index</span>
+<button aria-label="Close portfolio index" id="v-index-close">Close</button>
+</div>
+<div class="v-index-grid" id="v-index-grid">
+{pageIndices.map((n) => (
+  <button aria-label={`Go to page ${n}`} class="v-thumb" data-page={n}>
+    <span class="v-thumb-canvas" data-page={n}></span>
+    <span class="v-thumb-num">{pad(n)}</span>
+  </button>
+))}
+</div>
+</div>
+
+)}
+
+<script>
+  import '../scripts/portfolio-viewer';
+</script>
+
+</BaseLayout>

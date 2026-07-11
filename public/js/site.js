@@ -1,7 +1,9 @@
 function tick(){
   const f = tz => new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date());
-  document.getElementById('clk-seoul').textContent = f('Asia/Seoul');
-  document.getElementById('clk-nyc').textContent = f('America/New_York');
+  const seoul = document.getElementById('clk-seoul');
+  const nyc = document.getElementById('clk-nyc');
+  if(seoul) seoul.textContent = f('Asia/Seoul');
+  if(nyc) nyc.textContent = f('America/New_York');
 }
 tick(); setInterval(tick,1000);
 
