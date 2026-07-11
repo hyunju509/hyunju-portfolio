@@ -6,14 +6,20 @@ const tierA = PROJECTS.filter((p) => p.tier === 'A');
 const tierB = PROJECTS.filter((p) => p.tier === 'B');
 ---
 <main class="work" id="work">
-<div class="selected-grid" id="grid">
+<div id="grid">
+<div class="selected-grid">
 {tierA.map((p, i) => <GridItem p={p} i={i} />)}
+</div>
 {tierB.length > 0 && (
-  <div class="more-work-heading" role="presentation">
-    <span>More Work</span>
-  </div>
+  <>
+    <div class="more-work-heading" role="presentation">
+      <span>More Work</span>
+    </div>
+    <div class="more-work-grid">
+    {tierB.map((p, i) => <GridItem p={p} i={tierA.length + i} />)}
+    </div>
+  </>
 )}
-{tierB.map((p, i) => <GridItem p={p} i={tierA.length + i} />)}
 </div>
 <div aria-hidden="true" class="gx-ghost" id="gx-ghost"><img alt="" /></div>
 </main>

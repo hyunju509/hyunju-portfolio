@@ -83,13 +83,23 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
   .selected-grid{grid-template-columns:1fr;gap:40px;}
 }
 
-/* More Work: same grid mechanics as Selected Works (so the in-flow
-   expansion FLIP logic keeps working unmodified), lower visual hierarchy
-   via a quieter heading and slightly muted caption treatment only. */
-.more-work-heading{grid-column:1/-1;margin:16px 0 -4px;padding-top:36px;border-top:1px solid var(--hair);}
+/* More Work: same grid item + FLIP-expansion mechanics as Selected Works
+   (both live under #grid so project-expand.ts treats them as one list),
+   but a denser, smaller grid of its own to read as clearly subordinate. */
+.more-work-heading{margin:44px 0 20px;padding-top:32px;border-top:1px solid var(--hair);}
 .more-work-heading span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray2);}
-.gitem[data-tier="B"] .proj-card .ct{font-weight:300;}
-.gitem[data-tier="B"] .proj-card .pmeta{color:var(--gray2);}
+.more-work-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:28px 16px;}
+.more-work-grid .proj-card .thumb{aspect-ratio:4/3;}
+.more-work-grid .proj-card figcaption{padding:7px 1px 0;font-size:10.5px;line-height:1.4;}
+.more-work-grid .proj-card .pnum{font-size:9px;}
+.more-work-grid .proj-card .ct{font-size:11px;font-weight:300;}
+.more-work-grid .proj-card .pmeta{font-size:9.5px;color:var(--gray2);}
+@media (max-width:1024px){
+  .more-work-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:640px){
+  .more-work-grid{grid-template-columns:repeat(2,1fr);gap:20px 12px;}
+}
 
 /* ---------- footer (quiet) ---------- */
 .foot{padding:8vh 18px 12vh;}

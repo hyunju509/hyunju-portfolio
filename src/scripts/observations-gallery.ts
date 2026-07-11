@@ -1,44 +1,34 @@
 /*
- * Places gallery: location filter (no reload) + a restrained full-image
- * viewer. Filtering just toggles a `hidden` class per tile — cheap, and
- * keeps every tile's data attributes intact for the viewer's prev/next
- * to re-query the currently visible set on demand.
+ * Observations page behavior:
+ *  - local section navigation (Places / Writing / Image Studies) with
+ *    scroll-spy active state, header-aware anchor scrolling, and hash sync
+ *  - Places gallery: location filter (no reload)
+ *  - Image Studies gallery: category filter (no reload)
+ *  - one shared full-image viewer used by both galleries
+ *
+ * Filtering just toggles a `hidden` attribute per tile — cheap, and keeps
+ * every tile's data attributes intact for the viewer's prev/next to
+ * re-query the currently visible set on demand.
  */
 
 const FADE_MS = 220;
 
-function init() {
-  const root = document.getElementById('obs-places');
-  if (!root) return;
+function reduceMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
-  const filterBar = root.querySelector<HTMLElement>('.obs-filters');
-  const grid = root.querySelector<HTMLElement>('.obs-grid');
-  const tiles = Array.from(root.querySelectorAll<HTMLButtonElement>('.obs-tile'));
-  if (!filterBar || !grid) return;
+/* ---------------------------------------------------------------------- */
+/* shared full-image viewer                                               */
+/* ---------------------------------------------------------------------- */
 
-  const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+interface ViewerController {
+  open: (tile: HTMLButtonElement, visibleList: HTMLButtonElement[]) => void;
+}
 
-  /* ---- filter ---- */
-  function applyFilter(slug: string) {
-    filterBar!.querySelectorAll<HTMLButtonElement>('.obs-filter').forEach((btn) => {
-      const on = btn.dataset.slug === slug;
-      btn.setAttribute('aria-pressed', String(on));
-    });
-    tiles.forEach((tile) => {
-      const show = slug === 'all' || tile.dataset.slug === slug;
-      tile.hidden = !show;
-    });
-  }
-
-  filterBar.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.obs-filter');
-    if (!btn) return;
-    applyFilter(btn.dataset.slug || 'all');
-  });
-
-  /* ---- viewer ---- */
+function initViewer(): ViewerController | null {
   const viewer = document.getElementById('obs-viewer') as HTMLElement | null;
-  if (!viewer) return;
+  if (!viewer) return null;
+
   const viewerImg = viewer.querySelector('img') as HTMLImageElement;
   const viewerCaption = viewer.querySelector('.obs-viewer-caption') as HTMLElement;
   const closeBtn = viewer.querySelector('.obs-viewer-close') as HTMLButtonElement;
@@ -51,10 +41,6 @@ function init() {
   let scrollY = 0;
   let isOpen = false;
 
-  function visibleTiles(): HTMLButtonElement[] {
-    return tiles.filter((t) => !t.hidden);
-  }
-
   function renderCurrent() {
     const tile = visibleList[currentIndex];
     if (!tile) return;
@@ -66,7 +52,7 @@ function init() {
     const height = tile.dataset.height || '';
 
     viewerImg.src = full;
-    viewerImg.alt = `${title} photograph ${seq}`;
+    viewerImg.alt = `${title} image ${seq}`;
     if (width) viewerImg.width = parseInt(width, 10);
     if (height) viewerImg.height = parseInt(height, 10);
     const pad = (n: string) => n.padStart(2, '0');
@@ -89,9 +75,9 @@ function init() {
     }
   }
 
-  function openViewer(tile: HTMLButtonElement) {
+  function open(tile: HTMLButtonElement, list: HTMLButtonElement[]) {
     if (isOpen) return;
-    visibleList = visibleTiles();
+    visibleList = list;
     currentIndex = visibleList.indexOf(tile);
     if (currentIndex < 0) return;
     isOpen = true;
@@ -110,7 +96,7 @@ function init() {
     document.addEventListener('keydown', onKeydown);
   }
 
-  function closeViewer() {
+  function close() {
     if (!isOpen) return;
     isOpen = false;
     viewer.classList.remove('open');
@@ -136,22 +122,16 @@ function init() {
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') { e.preventDefault(); closeViewer(); }
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
   }
 
-  grid!.addEventListener('click', (e) => {
-    const tile = (e.target as HTMLElement).closest<HTMLButtonElement>('.obs-tile');
-    if (!tile || tile.hidden) return;
-    openViewer(tile);
-  });
-
-  closeBtn.addEventListener('click', closeViewer);
+  closeBtn.addEventListener('click', close);
   prevBtn.addEventListener('click', () => step(-1));
   nextBtn.addEventListener('click', () => step(1));
   viewer.addEventListener('click', (e) => {
-    if (e.target === viewer) closeViewer();
+    if (e.target === viewer) close();
   });
 
   // simple, reliable swipe: horizontal drag past a threshold steps once
@@ -168,6 +148,126 @@ function init() {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 50) step(dx > 0 ? -1 : 1);
   }, { passive: true });
+
+  return { open };
+}
+
+/* ---------------------------------------------------------------------- */
+/* gallery (Places or Image Studies)                                      */
+/* ---------------------------------------------------------------------- */
+
+function initGallery(rootId: string, filterKey: string, viewer: ViewerController) {
+  const root = document.getElementById(rootId);
+  if (!root) return;
+
+  const filterBar = root.querySelector<HTMLElement>('.obs-filters');
+  const grid = root.querySelector<HTMLElement>('.obs-grid');
+  const tiles = Array.from(root.querySelectorAll<HTMLButtonElement>('.obs-tile'));
+  if (!grid) return;
+
+  function visibleTiles(): HTMLButtonElement[] {
+    return tiles.filter((t) => !t.hidden);
+  }
+
+  if (filterBar) {
+    function applyFilter(value: string) {
+      filterBar!.querySelectorAll<HTMLButtonElement>('.obs-filter').forEach((btn) => {
+        const on = (btn.dataset[filterKey] || 'all') === value;
+        btn.setAttribute('aria-pressed', String(on));
+      });
+      tiles.forEach((tile) => {
+        const show = value === 'all' || tile.dataset[filterKey] === value;
+        tile.hidden = !show;
+      });
+    }
+
+    filterBar.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.obs-filter');
+      if (!btn) return;
+      applyFilter(btn.dataset[filterKey] || 'all');
+    });
+  }
+
+  grid.addEventListener('click', (e) => {
+    const tile = (e.target as HTMLElement).closest<HTMLButtonElement>('.obs-tile');
+    if (!tile || tile.hidden) return;
+    viewer.open(tile, visibleTiles());
+  });
+}
+
+/* ---------------------------------------------------------------------- */
+/* local section navigation (scroll-spy + header-aware anchor scroll)     */
+/* ---------------------------------------------------------------------- */
+
+function initSubnav() {
+  const nav = document.querySelector<HTMLElement>('.obs-subnav');
+  if (!nav) return;
+
+  const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('.obs-subnav-link'));
+  const sections = links
+    .map((link) => document.getElementById(link.dataset.target || ''))
+    .filter((el): el is HTMLElement => !!el);
+  if (!sections.length) return;
+
+  function setActive(id: string) {
+    links.forEach((link) => {
+      link.classList.toggle('active', link.dataset.target === id);
+    });
+  }
+
+  function scrollToSection(id: string, instant: boolean) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: instant || reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  links.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = link.dataset.target || '';
+      if (!id) return;
+      scrollToSection(id, false);
+      history.pushState(null, '', `#${id}`);
+      setActive(id);
+    });
+  });
+
+  window.addEventListener('popstate', () => {
+    const id = location.hash.replace('#', '');
+    if (id) scrollToSection(id, false);
+  });
+
+  // direct hash link on initial load: land instantly, no animation jank
+  if (location.hash) {
+    const id = location.hash.replace('#', '');
+    if (sections.some((s) => s.id === id)) {
+      window.requestAnimationFrame(() => scrollToSection(id, true));
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible.length > 0) {
+        setActive((visible[0].target as HTMLElement).id);
+      }
+    },
+    { rootMargin: '-100px 0px -60% 0px', threshold: [0, 0.1, 0.5, 1] }
+  );
+  sections.forEach((section) => observer.observe(section));
+}
+
+/* ---------------------------------------------------------------------- */
+
+function init() {
+  const viewer = initViewer();
+  if (!viewer) return;
+
+  initGallery('places', 'slug', viewer);
+  initGallery('image-studies', 'category', viewer);
+  initSubnav();
 }
 
 if (document.readyState === 'loading') {

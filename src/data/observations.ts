@@ -163,3 +163,120 @@ export const OBSERVATION_LOCATIONS: ObservationLocation[] = [
 ];
 
 export const ALL_LOCATIONS_LABEL = "All";
+
+/*
+ * Image Studies — AI-assisted material and spatial image registry.
+ * Consumers: src/pages/observations.astro, src/scripts/observations-gallery.ts
+ */
+export type ImageStudyCategory = "material-experiments" | "spatial-images";
+
+export interface ImageStudyItem {
+  id: string;
+  category: ImageStudyCategory;
+  seq: number;
+  thumb: string;
+  full: string;
+  width: number;
+  height: number;
+  label: string;
+}
+
+export interface ImageStudyCategoryInfo {
+  slug: ImageStudyCategory;
+  title: string;
+  description: string;
+}
+
+export const IMAGE_STUDY_CATEGORIES: ImageStudyCategoryInfo[] = [
+  {
+    slug: "material-experiments",
+    title: "Material Experiments",
+    description: "Studies of texture, assembly, translucency, and material transformation.",
+  },
+  {
+    slug: "spatial-images",
+    title: "Spatial Images",
+    description: "Speculative interiors and architectural scenes developed through iterative image making.",
+  },
+];
+
+export const IMAGE_STUDIES: ImageStudyItem[] = [
+  { id: "material-experiments-01", category: "material-experiments", seq: 1, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_01.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_01.webp", width: 512, height: 512, label: "Material Experiments · 01 / 06" },
+  { id: "material-experiments-02", category: "material-experiments", seq: 2, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_02.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_02.webp", width: 512, height: 512, label: "Material Experiments · 02 / 06" },
+  { id: "material-experiments-03", category: "material-experiments", seq: 3, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_03.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_03.webp", width: 512, height: 512, label: "Material Experiments · 03 / 06" },
+  { id: "material-experiments-04", category: "material-experiments", seq: 4, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_04.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_04.webp", width: 1024, height: 1024, label: "Material Experiments · 04 / 06" },
+  { id: "material-experiments-05", category: "material-experiments", seq: 5, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_05.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_05.webp", width: 1024, height: 1024, label: "Material Experiments · 05 / 06" },
+  { id: "material-experiments-06", category: "material-experiments", seq: 6, thumb: "/images/observations/image-studies/ai/material-experiments/thumbs/material-experiments_06.webp", full: "/images/observations/image-studies/ai/material-experiments/full/material-experiments_06.webp", width: 1024, height: 1024, label: "Material Experiments · 06 / 06" },
+  { id: "spatial-images-01", category: "spatial-images", seq: 1, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_01.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_01.webp", width: 1024, height: 1024, label: "Spatial Images · 01 / 31" },
+  { id: "spatial-images-02", category: "spatial-images", seq: 2, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_02.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_02.webp", width: 1536, height: 1536, label: "Spatial Images · 02 / 31" },
+  { id: "spatial-images-03", category: "spatial-images", seq: 3, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_03.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_03.webp", width: 512, height: 512, label: "Spatial Images · 03 / 31" },
+  { id: "spatial-images-04", category: "spatial-images", seq: 4, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_04.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_04.webp", width: 1024, height: 1024, label: "Spatial Images · 04 / 31" },
+  { id: "spatial-images-05", category: "spatial-images", seq: 5, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_05.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_05.webp", width: 1024, height: 1024, label: "Spatial Images · 05 / 31" },
+  { id: "spatial-images-06", category: "spatial-images", seq: 6, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_06.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_06.webp", width: 1024, height: 1024, label: "Spatial Images · 06 / 31" },
+  { id: "spatial-images-07", category: "spatial-images", seq: 7, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_07.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_07.webp", width: 1024, height: 1024, label: "Spatial Images · 07 / 31" },
+  { id: "spatial-images-08", category: "spatial-images", seq: 8, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_08.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_08.webp", width: 1024, height: 1024, label: "Spatial Images · 08 / 31" },
+  { id: "spatial-images-09", category: "spatial-images", seq: 9, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_09.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_09.webp", width: 1024, height: 1024, label: "Spatial Images · 09 / 31" },
+  { id: "spatial-images-10", category: "spatial-images", seq: 10, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_10.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_10.webp", width: 1024, height: 1024, label: "Spatial Images · 10 / 31" },
+  { id: "spatial-images-11", category: "spatial-images", seq: 11, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_11.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_11.webp", width: 1024, height: 1024, label: "Spatial Images · 11 / 31" },
+  { id: "spatial-images-12", category: "spatial-images", seq: 12, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_12.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_12.webp", width: 1024, height: 1024, label: "Spatial Images · 12 / 31" },
+  { id: "spatial-images-13", category: "spatial-images", seq: 13, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_13.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_13.webp", width: 1024, height: 1024, label: "Spatial Images · 13 / 31" },
+  { id: "spatial-images-14", category: "spatial-images", seq: 14, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_14.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_14.webp", width: 1024, height: 1024, label: "Spatial Images · 14 / 31" },
+  { id: "spatial-images-15", category: "spatial-images", seq: 15, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_15.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_15.webp", width: 1024, height: 1024, label: "Spatial Images · 15 / 31" },
+  { id: "spatial-images-16", category: "spatial-images", seq: 16, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_16.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_16.webp", width: 1024, height: 1024, label: "Spatial Images · 16 / 31" },
+  { id: "spatial-images-17", category: "spatial-images", seq: 17, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_17.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_17.webp", width: 1024, height: 1024, label: "Spatial Images · 17 / 31" },
+  { id: "spatial-images-18", category: "spatial-images", seq: 18, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_18.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_18.webp", width: 1024, height: 1024, label: "Spatial Images · 18 / 31" },
+  { id: "spatial-images-19", category: "spatial-images", seq: 19, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_19.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_19.webp", width: 1024, height: 1024, label: "Spatial Images · 19 / 31" },
+  { id: "spatial-images-20", category: "spatial-images", seq: 20, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_20.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_20.webp", width: 1024, height: 1024, label: "Spatial Images · 20 / 31" },
+  { id: "spatial-images-21", category: "spatial-images", seq: 21, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_21.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_21.webp", width: 1024, height: 1024, label: "Spatial Images · 21 / 31" },
+  { id: "spatial-images-22", category: "spatial-images", seq: 22, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_22.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_22.webp", width: 1024, height: 1024, label: "Spatial Images · 22 / 31" },
+  { id: "spatial-images-23", category: "spatial-images", seq: 23, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_23.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_23.webp", width: 1024, height: 1024, label: "Spatial Images · 23 / 31" },
+  { id: "spatial-images-24", category: "spatial-images", seq: 24, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_24.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_24.webp", width: 1024, height: 1024, label: "Spatial Images · 24 / 31" },
+  { id: "spatial-images-25", category: "spatial-images", seq: 25, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_25.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_25.webp", width: 1024, height: 1024, label: "Spatial Images · 25 / 31" },
+  { id: "spatial-images-26", category: "spatial-images", seq: 26, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_26.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_26.webp", width: 1024, height: 1024, label: "Spatial Images · 26 / 31" },
+  { id: "spatial-images-27", category: "spatial-images", seq: 27, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_27.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_27.webp", width: 1024, height: 1024, label: "Spatial Images · 27 / 31" },
+  { id: "spatial-images-28", category: "spatial-images", seq: 28, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_28.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_28.webp", width: 1024, height: 1024, label: "Spatial Images · 28 / 31" },
+  { id: "spatial-images-29", category: "spatial-images", seq: 29, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_29.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_29.webp", width: 1024, height: 1024, label: "Spatial Images · 29 / 31" },
+  { id: "spatial-images-30", category: "spatial-images", seq: 30, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_30.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_30.webp", width: 1024, height: 1024, label: "Spatial Images · 30 / 31" },
+  { id: "spatial-images-31", category: "spatial-images", seq: 31, thumb: "/images/observations/image-studies/ai/spatial-images/thumbs/spatial-images_31.webp", full: "/images/observations/image-studies/ai/spatial-images/full/spatial-images_31.webp", width: 1024, height: 1024, label: "Spatial Images · 31 / 31" },
+];
+
+/*
+ * Homepage preview selectors — pick a small, curated, visually distinct
+ * subset by (location slug, seq) / item id rather than duplicating image
+ * paths, so the homepage stays derived from this single registry.
+ * Consumers: src/components/ObservationsPreview.astro
+ */
+export interface FeaturedPlaceImage {
+  id: string;
+  slug: string;
+  title: string;
+  thumb: string;
+}
+
+const FEATURED_PLACES_PICKS: { slug: string; seq: number }[] = [
+  { slug: "japan", seq: 1 },
+  { slug: "los-angeles", seq: 1 },
+  { slug: "las-vegas", seq: 3 },
+  { slug: "new-york", seq: 1 },
+  { slug: "japan", seq: 30 },
+];
+
+export function getFeaturedPlaces(): FeaturedPlaceImage[] {
+  return FEATURED_PLACES_PICKS.map(({ slug, seq }) => {
+    const loc = OBSERVATION_LOCATIONS.find((l) => l.slug === slug)!;
+    const img = loc.images.find((i) => i.seq === seq)!;
+    return { id: `${slug}-${seq}`, slug, title: loc.title, thumb: img.thumb };
+  });
+}
+
+const FEATURED_IMAGE_STUDY_IDS = [
+  "material-experiments-01",
+  "material-experiments-04",
+  "spatial-images-01",
+  "spatial-images-16",
+  "spatial-images-25",
+];
+
+export function getFeaturedImageStudies(): ImageStudyItem[] {
+  return FEATURED_IMAGE_STUDY_IDS.map((id) => IMAGE_STUDIES.find((s) => s.id === id)!);
+}
