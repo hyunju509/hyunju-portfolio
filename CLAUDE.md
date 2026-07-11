@@ -100,7 +100,9 @@
 06 Ordinary Village: Hide and Seek  
 07 Ivanpah Solar Sanctuary  
 
-(순서의 단일 소스: `src/data/projects.ts` — 홈페이지 그리드, Project Stage, Project Rooms가 모두 이 모듈을 사용한다. PDF 뷰어는 PDF 자체 순서를 따른다.)
+(순서의 단일 소스: `src/data/projects.ts` — 홈페이지 그리드, in-flow 프로젝트 확장, Project Rooms가 모두 이 모듈을 사용한다. PDF 뷰어는 PDF 자체 순서를 따른다.)
+
+홈페이지 프로젝트 인터랙션: 카드 클릭 시 fixed overlay나 route 이동 없이 해당 grid item이 `grid-column:1/-1`로 문서 흐름 안에서 확장된다(한 번에 하나만, `src/scripts/project-expand.ts`). 확장 내부에서만 좌우로 시트를 넘기고, 세로 스크롤은 항상 네이티브 문서 스크롤이다.
 
 ### Tier B — More Work
 08 Terroir Hotsprings  
