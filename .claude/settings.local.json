@@ -17,7 +17,11 @@
       "Bash(git rm *)",
       "Bash(rmdir js *)",
       "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"name='node.exe'\\\\\" | Select-Object ProcessId,CommandLine\")",
-      "Bash(powershell -Command 'Stop-Process -Id 1988,19068,45172,13944 -Force -Confirm:$false')"
+      "Bash(powershell -Command 'Stop-Process -Id 1988,19068,45172,13944 -Force -Confirm:$false')",
+      "Bash(git commit -m ' *)",
+      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"name='\\\\''node.exe'\\\\''\" | Where-Object {$_.CommandLine -like '\\\\''*astro*'\\\\''} | Select-Object ProcessId,CommandLine')",
+      "Bash(powershell -Command 'Stop-Process -Id 39940 -Force -Confirm:$false')",
+      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"name='\\\\''node.exe'\\\\''\" | Where-Object {$_.CommandLine -like '\\\\''*npm-cli.js run dev*'\\\\''} | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')"
     ]
   }
 }
