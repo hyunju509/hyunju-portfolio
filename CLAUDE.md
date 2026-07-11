@@ -52,10 +52,11 @@
 4. Shadow Archive: Inverse Preserve
 5. Ordinary Village: Hide and Seek
 6. Ivanpah Solar Sanctuary
+7. Spectrum Living
 
 원칙:
-- Desktop: 2-column
-- Tablet: 2-column 가능하면 유지
+- Desktop: 3-column
+- Tablet: 2-column
 - Mobile: 1-column
 - 프로젝트당 1개의 명확한 entry
 - 같은 프로젝트를 여러 masonry item으로 반복하지 않는다.
@@ -73,7 +74,6 @@
 ### 3. More Work / Archive
 현재 추가 프로젝트:
 
-7. Spectrum Living
 8. Terroir Hotsprings
 9. Playful Layers
 
@@ -98,9 +98,9 @@
 04 Shadow Archive: Inverse Preserve  
 05 Ordinary Village: Hide and Seek  
 06 Ivanpah Solar Sanctuary  
+07 Spectrum Living  
 
 ### Tier B — More Work
-07 Spectrum Living  
 08 Terroir Hotsprings  
 09 Playful Layers  
 
@@ -466,7 +466,7 @@ Availability 문구는 About 또는 Contact에서 작게 사용할 수 있다.
 3. 약하거나 오래된 프로젝트는 하단 More Work / Archive에 배치한다.
 4. Selected Works는 프로젝트 단위 entry를 사용한다.
 5. 같은 프로젝트를 여러 masonry item으로 반복하지 않는다.
-6. Desktop Selected Works는 2-column.
+6. Desktop Selected Works는 3-column.
 7. Mobile은 1-column.
 8. More Work는 낮은 위계의 compact grid.
 9. subtle primary-to-secondary image crossfade 허용.

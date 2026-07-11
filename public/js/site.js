@@ -23,7 +23,7 @@ function setFilter(f){
   document.getElementById('work').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-const ORDER = ["calibrated", "fluid", "surreal", "spectrum", "shadow"];
+const ORDER = ["fluid", "calibrated", "surreal", "shadow", "ordinary", "ivanpah", "spectrum"];
 let current = null;
 function openRoom(id){
   const el = document.getElementById('room-'+id);
