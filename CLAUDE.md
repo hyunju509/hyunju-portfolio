@@ -49,10 +49,10 @@
 1. Fluid Terrain
 2. Calibrated Environment
 3. Surreal Museum Tower
-4. Shadow Archive: Inverse Preserve
-5. Ordinary Village: Hide and Seek
-6. Ivanpah Solar Sanctuary
-7. Spectrum Living
+4. Spectrum Living
+5. Shadow Archive: Inverse Preserve
+6. Ordinary Village: Hide and Seek
+7. Ivanpah Solar Sanctuary
 
 원칙:
 - Desktop: 3-column
@@ -95,10 +95,12 @@
 01 Fluid Terrain  
 02 Calibrated Environment  
 03 Surreal Museum Tower  
-04 Shadow Archive: Inverse Preserve  
-05 Ordinary Village: Hide and Seek  
-06 Ivanpah Solar Sanctuary  
-07 Spectrum Living  
+04 Spectrum Living  
+05 Shadow Archive: Inverse Preserve  
+06 Ordinary Village: Hide and Seek  
+07 Ivanpah Solar Sanctuary  
+
+(순서의 단일 소스: `src/data/projects.ts` — 홈페이지 그리드, Project Stage, Project Rooms가 모두 이 모듈을 사용한다. PDF 뷰어는 PDF 자체 순서를 따른다.)
 
 ### Tier B — More Work
 08 Terroir Hotsprings  

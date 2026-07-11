@@ -1,129 +1,12 @@
 ---
-interface MetaRow {
-  k: string;
-  v: string;
-}
-
-interface RoomProject {
-  id: string;
-  num: string;
-  title: string;
-  desc: string;
-  meta: MetaRow[];
-  folder: string;
-  pages: string[];
-}
-
-const projects: RoomProject[] = [
-  {
-    id: "fluid",
-    num: "01",
-    title: "Fluid Terrain",
-    desc: "A porous gabion landscape built from recycled concrete that slows floodwater and supports seasonal habitation along the creek edge. Elevated structures and terraced ground adapt to shifting water levels across flood and drought cycles.",
-    meta: [
-      { k: "Period", v: "2026 Spring · Columbia GSAPP" },
-      { k: "Location", v: "Santa Paula Creek, Ventura County, CA" },
-      { k: "Program", v: "Hydrological landscape infrastructure" },
-      { k: "Credits", v: "Individual · Instructor Marc Tsurumaki" },
-    ],
-    folder: "fluid-terrain",
-    pages: ["01-fluid-01.jpg", "01-fluid-02.jpg", "01-fluid-03.jpg", "01-fluid-04.jpg", "01-fluid-05.jpg"],
-  },
-  {
-    id: "calibrated",
-    num: "02",
-    title: "Calibrated Environment",
-    desc: "A mixed-use tower organized through daylight analysis, thermal mapping, and occupancy-based program distribution. Environmental performance becomes the framework that calibrates massing, facade, and program across residential, retail, and public floors.",
-    meta: [
-      { k: "Period", v: "2026 Spring · Columbia GSAPP" },
-      { k: "Location", v: "1227 Broadway, New York, NY" },
-      { k: "Program", v: "Mixed-use environmental tower" },
-      { k: "Credits", v: "Team project · Instructor Joseph A. Brennan" },
-      { k: "Role", v: "Environmental analysis, iterative massing studies with Ladybug, facade studies, residential layouts, and Revit documentation." },
-    ],
-    folder: "calibrated-environment",
-    pages: ["02-calibrated-01.jpg", "02-calibrated-02.jpg", "02-calibrated-03.jpg"],
-  },
-  {
-    id: "surreal",
-    num: "03",
-    title: "Surreal Museum Tower",
-    desc: "A vertical museum inserted into the commercial spectacle of Times Square. Exhibition cubes stack into a non-linear sequence that shifts between compression and expansion, reality and dream.",
-    meta: [
-      { k: "Period", v: "2024 · Kookmin University graduate exhibition" },
-      { k: "Location", v: "Times Square, New York, NY" },
-      { k: "Program", v: "Vertical museum prototype" },
-      { k: "Credits", v: "Individual · Sensory Museum honorable mention" },
-    ],
-    folder: "surreal-museum-tower",
-    pages: ["03-surreal-01.jpg", "03-surreal-02.jpg", "03-surreal-03.jpg"],
-  },
-  {
-    id: "shadow",
-    num: "04",
-    title: "Shadow Archive",
-    desc: "A distributed archive in the tundra-boreal transition zone. Moving volumes cast fields of prolonged shade that stabilize thawing ground, turning shadow itself into a preservation strategy.",
-    meta: [
-      { k: "Period", v: "2025 Fall · Columbia GSAPP" },
-      { k: "Location", v: "Churchill, Canada" },
-      { k: "Program", v: "Environmental research archive" },
-      { k: "Credits", v: "With Meng-Syun Sung · Instructor Leslie Gill" },
-    ],
-    folder: "shadow-archive",
-    pages: ["04-shadow-01.jpg", "04-shadow-02.jpg", "04-shadow-03.jpg", "04-shadow-04.jpg"],
-  },
-  {
-    id: "ordinary",
-    num: "05",
-    title: "Ordinary Village: Hide and Seek",
-    desc: "An interactive residential village in Seoul that treats hide-and-seek as a spatial strategy, testing interaction, boundary, and variability across an adaptive domestic environment shared by a community.",
-    meta: [
-      { k: "Year", v: "2022" },
-      { k: "Location", v: "Seoul, South Korea" },
-      { k: "Type", v: "Interactive residential village" },
-      { k: "Focus", v: "Adaptive domestic space" },
-      { k: "Keywords", v: "Interaction · Boundary · Variability · Community" },
-    ],
-    folder: "ordinary-village",
-    pages: ["05-ordinary-01.jpg", "05-ordinary-02.jpg", "05-ordinary-03.jpg"],
-  },
-  {
-    id: "ivanpah",
-    num: "06",
-    title: "Ivanpah Solar Sanctuary",
-    desc: "A minimal architectural intervention in the Mojave Desert that reconsiders solar infrastructure as a site of ecological coexistence, treating the desert as an inhabitant rather than an obstacle.",
-    meta: [
-      { k: "Year", v: "2025" },
-      { k: "Location", v: "Ivanpah Desert, Mojave Desert, CA" },
-      { k: "Type", v: "Ecological energy sanctuary" },
-      { k: "Focus", v: "Minimal desert intervention" },
-      { k: "Keywords", v: "Infrastructure · Coexistence · Ecology · Non-Human" },
-    ],
-    folder: "ivanpah-solar-sanctuary",
-    pages: ["06-ivanpah-01.jpg", "06-ivanpah-02.jpg"],
-  },
-  {
-    id: "spectrum",
-    num: "07",
-    title: "Spectrum Living",
-    desc: "Collective housing that links varied living environments through community bridges. Straight lines and circles organize a gradient from private rooms to shared ground, negotiating privacy and exchange across generations.",
-    meta: [
-      { k: "Period", v: "2023 · RMIT" },
-      { k: "Location", v: "Melbourne, Australia" },
-      { k: "Program", v: "Collective housing prototype" },
-      { k: "Credits", v: "Individual" },
-    ],
-    folder: "spectrum-living",
-    pages: ["07-spectrum-01.jpg", "07-spectrum-02.jpg", "07-spectrum-03.jpg", "07-spectrum-04.jpg"],
-  },
-];
+import { PROJECTS, pad, sheetPath } from '../data/projects';
 ---
-{projects.map((p) => (
+{PROJECTS.map((p, i) => (
 <article aria-hidden="true" class="room" id={`room-${p.id}`}>
 <div class="room-scroll">
 <header class="room-top">
 <button class="back" onclick="closeRoom()">&larr; Back</button>
-<span class="room-num">{p.num} / 07</span>
+<span class="room-num">{pad(i + 1)} / {pad(PROJECTS.length)}</span>
 </header>
 <div class="room-body">
 <div class="room-intro">
@@ -136,13 +19,13 @@ const projects: RoomProject[] = [
 </div>
 </div>
 <div class="sheets">
-{p.pages.map((file, i) => (
+{p.sheets.map((file, j) => (
 <figure class="sheet">
 <img
-  alt={`${p.title} — portfolio sheet ${i + 1} of ${p.pages.length}`}
+  alt={`${p.title} — portfolio sheet ${j + 1} of ${p.sheets.length}`}
   decoding="async"
-  loading={i === 0 ? "eager" : "lazy"}
-  src={`/images/portfolio-pages/${p.folder}/${file}`}
+  loading={j === 0 ? "eager" : "lazy"}
+  src={sheetPath(p, file)}
 />
 </figure>
 ))}

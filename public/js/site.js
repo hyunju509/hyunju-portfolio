@@ -25,7 +25,7 @@ function setFilter(f){
   document.getElementById('work').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-const ORDER = ["fluid", "calibrated", "surreal", "shadow", "ordinary", "ivanpah", "spectrum"];
+const ORDER = ["fluid", "calibrated", "surreal", "spectrum", "shadow", "ordinary", "ivanpah"];
 let current = null;
 function openRoom(id){
   const el = document.getElementById('room-'+id);

@@ -1,0 +1,52 @@
+---
+import { PROJECTS, pad, sheetPath } from '../data/projects';
+---
+<div aria-hidden="true" aria-label="Project stage" class="pstage" id="pstage" role="dialog">
+
+<header class="ps-top">
+<button aria-label="Close project stage" class="ps-back" id="ps-back">&larr; Back</button>
+<span class="ps-title" id="ps-title"></span>
+<span aria-live="polite" class="ps-counters"><span id="ps-pcount"></span><span id="ps-gcount"></span></span>
+</header>
+
+<div class="ps-scroll" id="ps-scroll" tabindex="-1">
+{PROJECTS.map((p, i) => (
+<section aria-label={`${p.title} — project ${pad(i + 1)}`} class="ps-proj" data-id={p.id} data-index={i} data-slug={p.slug} data-title={p.title}>
+<aside class="ps-rail">
+<h2 class="ps-proj-title">{p.title}</h2>
+<p class="ps-mmeta">{p.cardMeta}</p>
+<dl class="ps-meta">
+{p.meta.map((row) => (
+<div><dt>{row.k}</dt><dd>{row.v}</dd></div>
+))}
+</dl>
+</aside>
+<div class="ps-media">
+<div class="ps-track">
+{p.sheets.map((file, j) => (
+<figure class="ps-page">
+<img
+  alt={`${p.title} — sheet ${j + 1} of ${p.sheets.length}`}
+  decoding="async"
+  height="896"
+  loading="lazy"
+  src={sheetPath(p, file)}
+  width="1372"
+/>
+</figure>
+))}
+</div>
+<button aria-label={`Previous ${p.title} page`} class="ps-zone ps-zone-prev"></button>
+<button aria-label={`Next ${p.title} page`} class="ps-zone ps-zone-next"></button>
+</div>
+</section>
+))}
+</div>
+
+<div aria-hidden="true" class="ps-ghost" id="ps-ghost"><img alt="" id="ps-ghost-img" /></div>
+
+</div>
+
+<script>
+  import '../scripts/project-stage';
+</script>

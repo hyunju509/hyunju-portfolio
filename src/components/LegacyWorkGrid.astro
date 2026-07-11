@@ -1,52 +1,20 @@
 ---
-interface Project {
-  num: string;
-  id: string;
-  title: string;
-  meta?: string;
-  image: string;
-  secondary?: string;
-  hasRoom: boolean;
-}
-
-const projects: Project[] = [
-  { num: "01", id: "fluid", title: "Fluid Terrain", meta: "2026 · Landscape Infrastructure", image: "/images/portfolio-pages/fluid-terrain/01-fluid-01.jpg", secondary: "/images/portfolio-pages/fluid-terrain/01-fluid-02.jpg", hasRoom: true },
-  { num: "02", id: "calibrated", title: "Calibrated Environment", meta: "2026 · Mixed-Use Environmental Tower", image: "/images/portfolio-pages/calibrated-environment/02-calibrated-01.jpg", secondary: "/images/portfolio-pages/calibrated-environment/02-calibrated-02.jpg", hasRoom: true },
-  { num: "03", id: "surreal", title: "Surreal Museum Tower", meta: "2024 · Vertical Museum", image: "/images/portfolio-pages/surreal-museum-tower/03-surreal-01.jpg", secondary: "/images/portfolio-pages/surreal-museum-tower/03-surreal-02.jpg", hasRoom: true },
-  { num: "04", id: "shadow", title: "Shadow Archive: Inverse Preserve", meta: "2025 · Environmental Research Archive", image: "/images/portfolio-pages/shadow-archive/04-shadow-01.jpg", secondary: "/images/portfolio-pages/shadow-archive/04-shadow-02.jpg", hasRoom: true },
-  { num: "05", id: "ordinary", title: "Ordinary Village: Hide and Seek", meta: "2022 · Interactive Residential Village", image: "/images/portfolio-pages/ordinary-village/05-ordinary-01.jpg", secondary: "/images/portfolio-pages/ordinary-village/05-ordinary-02.jpg", hasRoom: true },
-  { num: "06", id: "ivanpah", title: "Ivanpah Solar Sanctuary", meta: "2025 · Ecological Energy Sanctuary", image: "/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-01.jpg", secondary: "/images/portfolio-pages/ivanpah-solar-sanctuary/06-ivanpah-02.jpg", hasRoom: true },
-  { num: "07", id: "spectrum", title: "Spectrum Living", meta: "2023 · Collective Housing", image: "/images/portfolio-pages/spectrum-living/07-spectrum-01.jpg", secondary: "/images/portfolio-pages/spectrum-living/07-spectrum-02.jpg", hasRoom: true },
-];
+import { PROJECTS, pad, cardImage, cardSecondary } from '../data/projects';
 ---
 <main class="work" id="work">
 <div class="selected-grid" id="grid">
-{projects.map((p) => (
-  p.hasRoom ? (
-    <figure aria-label={`Open ${p.title}`} class="proj-card item" data-id={p.id} role="button" tabindex="0">
-      <div class="thumb">
-        <img class="p1" alt={p.title} loading="lazy" src={p.image} />
-        {p.secondary && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={p.secondary} />}
-      </div>
-      <figcaption>
-        <span class="pnum">{p.num}</span>
-        <span class="ct">{p.title}</span>
-        {p.meta && <span class="pmeta">{p.meta}</span>}
-      </figcaption>
-    </figure>
-  ) : (
-    <figure class="proj-card">
-      <div class="thumb">
-        <img class="p1" alt={p.title} loading="lazy" src={p.image} />
-        {p.secondary && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={p.secondary} />}
-      </div>
-      <figcaption>
-        <span class="pnum">{p.num}</span>
-        <span class="ct">{p.title}</span>
-        {p.meta && <span class="pmeta">{p.meta}</span>}
-      </figcaption>
-    </figure>
-  )
+{PROJECTS.map((p, i) => (
+  <figure aria-label={`Open ${p.title} project`} class="proj-card" data-id={p.id} role="button" tabindex="0">
+    <div class="thumb">
+      <img class="p1" alt={p.title} loading="lazy" src={cardImage(p)} />
+      {cardSecondary(p) && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={cardSecondary(p)} />}
+    </div>
+    <figcaption>
+      <span class="pnum">{pad(i + 1)}</span>
+      <span class="ct">{p.title}</span>
+      <span class="pmeta">{p.cardMeta}</span>
+    </figcaption>
+  </figure>
 ))}
 </div>
 </main>

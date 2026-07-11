@@ -21,7 +21,9 @@
       "Bash(git commit -m ' *)",
       "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"name='\\\\''node.exe'\\\\''\" | Where-Object {$_.CommandLine -like '\\\\''*astro*'\\\\''} | Select-Object ProcessId,CommandLine')",
       "Bash(powershell -Command 'Stop-Process -Id 39940 -Force -Confirm:$false')",
-      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"name='\\\\''node.exe'\\\\''\" | Where-Object {$_.CommandLine -like '\\\\''*npm-cli.js run dev*'\\\\''} | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')"
+      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"name='\\\\''node.exe'\\\\''\" | Where-Object {$_.CommandLine -like '\\\\''*npm-cli.js run dev*'\\\\''} | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')",
+      "Bash(git commit -m 'Refine Info page Skills section heading *)",
+      "Bash(curl -s http://localhost:4321/portfolio)"
     ]
   }
 }
