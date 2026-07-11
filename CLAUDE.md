@@ -336,16 +336,25 @@
 ---
 
 ## 기술 규칙
-- 스택: vanilla HTML/CSS/JS.
-- 빌드 스텝 없음.
-- 프레임워크·번들러 도입은 합의 전 금지.
+- 스택: Astro + vanilla CSS + client 동작이 필요한 곳의 vanilla JavaScript.
+- React/Preact/Vue/Svelte, Tailwind, GSAP, CMS, UI 라이브러리 도입 금지 (2026-07-10 Astro 마이그레이션 세션에서 확정).
+- 추가 프레임워크·번들러 도입은 합의 전 금지.
 - 외부 라이브러리는 추가 전에 반드시 물어본다.
-- 기본은 no-dependency.
-- 기본 파일 구조:
-  - `index.html`
-  - `css/`
-  - `js/`
-  - `images/`
+- 기본은 no-dependency (Astro core만 의존).
+- 커맨드:
+  - `npm run dev` — 로컬 개발 서버
+  - `npm run build` — 프로덕션 빌드 (`dist/`)
+  - `npm run preview` — 프로덕션 빌드 미리보기
+- 파일 구조:
+  - `src/pages/` — 라우트 (`index.astro`)
+  - `src/components/` — `Header.astro`, `Hero.astro`, `LegacyWorkGrid.astro`, `Footer.astro`, `ProjectRooms.astro`
+  - `src/layouts/` — `BaseLayout.astro`
+  - `src/styles/` — `global.css` (기존 `site.css` 이전, 값 변경 없음)
+  - `src/data/` — `portfolio.ts` (포트폴리오 뷰어용 순서 데이터, 뷰어 자체는 미구현)
+  - `public/images/` — 이미지 에셋 (기존 `images/` 이전)
+  - `public/documents/` — CV/포트폴리오 PDF 저장용 (현재 비어 있음, PDF 미확보)
+  - `public/js/site.js` — 기존 인터랙션 로직 그대로 유지 (room open/close, next project, keyboard, clock, filter)
+- `LegacyWorkGrid.astro`와 `ProjectRooms.astro`는 임시 구조다. masonry 재설계와 project room 재설계는 각각 별도 세션에서 진행한다.
 - 반응형 체크포인트:
   - 390
   - 768
