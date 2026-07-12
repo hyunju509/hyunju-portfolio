@@ -156,6 +156,10 @@ const studyCategoryTitles = Object.fromEntries(IMAGE_STUDY_CATEGORIES.map((c) =>
   padding: 120px 4vw;
   max-width: 1200px;
   margin: 0 auto;
+  /* Places' lazily-loaded images sit above Writing/Image Studies; browser
+     scroll anchoring can silently re-adjust scroll position as their layout
+     settles, fighting a hash-driven scrollIntoView() on initial load. */
+  overflow-anchor: none;
 }
 
 .observations-intro {

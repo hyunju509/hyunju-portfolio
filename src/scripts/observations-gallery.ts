@@ -203,6 +203,14 @@ function initSubnav() {
   const nav = document.querySelector<HTMLElement>('.obs-subnav');
   if (!nav) return;
 
+  // The browser's default scroll restoration can silently reapply a
+  // remembered scroll position on top of (or racing) the explicit
+  // hash-driven jump below, on repeat visits within the same session
+  // history. This page drives scroll position itself, so take it over.
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+
   const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('.obs-subnav-link'));
   const sections = links
     .map((link) => document.getElementById(link.dataset.target || ''))
@@ -218,7 +226,13 @@ function initSubnav() {
   function scrollToSection(id: string, instant: boolean) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.scrollIntoView({ behavior: instant || reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+    // 'auto' defers to the page's CSS scroll-behavior (smooth site-wide, via
+    // html{scroll-behavior:smooth}), so an "instant" jump silently becomes a
+    // multi-hundred-ms animation that races any code reading scroll position
+    // shortly after. 'instant' is the one value that reliably bypasses CSS
+    // scroll-behavior and jumps synchronously across evergreen browsers.
+    const behavior = instant || reduceMotion() ? 'instant' : 'smooth';
+    el.scrollIntoView({ behavior: behavior as ScrollBehavior, block: 'start' });
   }
 
   links.forEach((link) => {
@@ -234,29 +248,72 @@ function initSubnav() {
 
   window.addEventListener('popstate', () => {
     const id = location.hash.replace('#', '');
-    if (id) scrollToSection(id, false);
+    if (id && sections.some((s) => s.id === id)) {
+      scrollToSection(id, false);
+      setActive(id);
+    }
   });
 
-  // direct hash link on initial load: land instantly, no animation jank
-  if (location.hash) {
-    const id = location.hash.replace('#', '');
-    if (sections.some((s) => s.id === id)) {
-      window.requestAnimationFrame(() => scrollToSection(id, true));
+  // Scroll-spy: the active section is whichever one's top edge most
+  // recently crossed the reference line just below the fixed header — i.e.
+  // the section the reference line currently sits inside. Driven directly
+  // off real scroll events rather than IntersectionObserver (whose
+  // threshold-crossing notifications batch and order unpredictably across
+  // instant jumps, smooth scrolls, and repeat same-tab navigations) and
+  // using "closest crossed top" rather than "largest overlap" (which
+  // unfairly favors a very tall section over a short neighbor sharing the
+  // same window).
+  function computeActiveSection(): string | null {
+    const referenceY = 100;
+    let best: HTMLElement | null = null;
+    for (const section of sections) {
+      const top = section.getBoundingClientRect().top;
+      if (top <= referenceY && (!best || top > best.getBoundingClientRect().top)) {
+        best = section;
+      }
     }
+    return (best ?? sections[0])?.id ?? null;
   }
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-      if (visible.length > 0) {
-        setActive((visible[0].target as HTMLElement).id);
+  let scrollTicking = false;
+  function onScroll() {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    window.requestAnimationFrame(() => {
+      const id = computeActiveSection();
+      if (id) setActive(id);
+      scrollTicking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // direct hash link on initial load: land instantly (a real 'instant' jump,
+  // not 'auto' — see scrollToSection above). The browser's own native
+  // fragment-on-load scroll can independently kick in around the same time
+  // and land short of (or past) the target, so this re-asserts the jump on
+  // a few early animation frames until the target section is confirmed in
+  // place rather than trusting a single call.
+  const initialHashId = location.hash.replace('#', '');
+  if (initialHashId && sections.some((s) => s.id === initialHashId)) {
+    setActive(initialHashId);
+    scrollToSection(initialHashId, true);
+    let attempts = 0;
+    const settle = () => {
+      attempts++;
+      const el = document.getElementById(initialHashId);
+      const inPlace = el && Math.abs(el.getBoundingClientRect().top - 100) < 4;
+      if (!inPlace && attempts < 20) {
+        scrollToSection(initialHashId, true);
+        window.requestAnimationFrame(settle);
+      } else {
+        setActive(initialHashId);
       }
-    },
-    { rootMargin: '-100px 0px -60% 0px', threshold: [0, 0.1, 0.5, 1] }
-  );
-  sections.forEach((section) => observer.observe(section));
+    };
+    window.requestAnimationFrame(settle);
+  } else {
+    const id = computeActiveSection();
+    if (id) setActive(id);
+  }
 }
 
 /* ---------------------------------------------------------------------- */
