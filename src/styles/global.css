@@ -233,15 +233,14 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 .v-book.spread.two .v-leaf:first-child .v-canvas::after{right:0;background:linear-gradient(to right,rgba(0,0,0,0),rgba(0,0,0,.06));}
 .v-book.spread.two .v-leaf:last-child .v-canvas::after{left:0;background:linear-gradient(to left,rgba(0,0,0,0),rgba(0,0,0,.06));}
 
-/* page-turn: segmented strip sheet, exactly page-sized (never taller,
-   never viewport-height); all shadow effects are children of each strip's
-   face and therefore clipped to the page rectangle. Rotation, lift and
-   shade are driven per-frame from JS (one shared master progress value
-   per strip) rather than CSS keyframes, so the whole set of strips stays
-   perfectly synchronized. */
-.v-turn-sheet{position:absolute;z-index:5;transform-style:preserve-3d;}
-.v-turn-strip{position:absolute;top:0;height:100%;transform-style:preserve-3d;will-change:transform;}
-.v-turn-face{position:absolute;inset:0;overflow:hidden;background:#fff;backface-visibility:hidden;}
+/* page-turn: ONE solid two-faced sheet, exactly page-sized. Front face is
+   the complete outgoing page canvas, back face the complete incoming page
+   (pre-rotated 180deg); both faces are single continuous canvases with
+   backface-visibility:hidden, so the image can never split into visible
+   slices or seams. Rotation and shade are driven per-frame from JS so an
+   obsolete turn can be abandoned cleanly. */
+.v-turn-sheet{position:absolute;z-index:5;transform-style:preserve-3d;will-change:transform;}
+.v-turn-face{position:absolute;inset:0;overflow:hidden;background:#fff;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;}
 .v-turn-face-back{transform:rotateY(180deg);}
 .v-turn-shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;}
 .viewer.turning .v-zone,
@@ -312,7 +311,10 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 .gx-zone:disabled{cursor:default;}
 .gx-zone:focus-visible{outline:2px solid var(--ink);outline-offset:-6px;}
 .gx-count{margin:10px 0 0;font-size:11.5px;letter-spacing:.08em;color:var(--gray2);font-variant-numeric:tabular-nums;text-align:center;}
-.gx-ghost{position:fixed;top:0;left:0;z-index:60;display:none;pointer-events:none;overflow:hidden;background:#fff;}
+/* document-anchored (absolute, not fixed): the ghost flies in page
+   coordinates, so a concurrent programmatic scroll (More Work centering)
+   moves it together with the grid instead of desynchronizing the flight */
+.gx-ghost{position:absolute;top:0;left:0;z-index:60;display:none;pointer-events:none;overflow:hidden;background:#fff;}
 .gx-ghost img{width:100%;height:100%;object-fit:cover;display:block;}
 
 .gx-media{transition:opacity 180ms ease-out;}
@@ -332,6 +334,24 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
   .gx-track{gap:4%;}
   .gx-prev{width:32%;}
   .gx-next{width:40%;}
+}
+
+/* More Work expanded refinements: the media frame is ~two collapsed-card
+   widths (cards are (100% - 4 gaps)/5 of the row), centered with its rail
+   in the full grid row rather than stretching to the homepage width; and
+   every image is clipped by ONE fixed 4:3 frame (the collapsed thumbnail
+   ratio) via object-fit, so changing images never resizes the frame or
+   shifts the page. Source files are untouched — cropping is visual only. */
+.more-work-grid .gx{grid-template-columns:190px calc((100% - 64px)/5*2);justify-content:center;}
+.more-work-grid .gx-media{aspect-ratio:4/3;}
+.more-work-grid .gx-track{height:100%;}
+.more-work-grid .gx-page{width:100%;height:100%;}
+.more-work-grid .gx-page img{width:100%;height:100%;object-fit:cover;object-position:center;}
+@media (max-width:1024px){
+  .more-work-grid .gx{grid-template-columns:158px minmax(0,1fr);justify-content:stretch;}
+}
+@media (max-width:760px){
+  .more-work-grid .gx{grid-template-columns:1fr;}
 }
 
 @media (prefers-reduced-motion:reduce){

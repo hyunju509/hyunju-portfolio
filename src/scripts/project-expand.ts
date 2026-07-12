@@ -20,6 +20,8 @@ const META_DELAY_MS = 180;
 const CROSSFADE_MS = 180;
 const CLOSE_META_MS = 130;
 const EASE = 'cubic-bezier(.22,1,.36,1)';
+const CENTER_MS = 820;
+const HEADER_OFFSET = 72;
 
 function init() {
   const grid = document.getElementById('grid');
@@ -85,6 +87,46 @@ function init() {
     el.style.height = `${r.height}px`;
   }
 
+  /*
+   * One-time eased scroll used to bring an expanding More Work project
+   * toward the vertical center of the viewport, concurrent with the FLIP
+   * flight (the ghost is document-anchored, so scrolling can't desync it).
+   * scrollTo per frame must be behavior:'instant' — the site-wide CSS
+   * scroll-behavior:smooth would otherwise re-animate every single tick.
+   */
+  let scrollAnimToken = 0;
+  function cancelCenterScroll() {
+    scrollAnimToken++;
+  }
+  function animateScrollTo(targetY: number, ms: number) {
+    const token = ++scrollAnimToken;
+    const startY = window.scrollY;
+    const delta = targetY - startY;
+    if (Math.abs(delta) < 2) return;
+    const start = performance.now();
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    function frame(now: number) {
+      if (token !== scrollAnimToken) return;
+      const t = Math.min(1, (now - start) / ms);
+      window.scrollTo({ top: startY + delta * easeOutCubic(t), behavior: 'instant' as ScrollBehavior });
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* Vertical-center scroll target for the expanded item: centered in the
+     space below the fixed header, or aligned just under the header when
+     the expanded card is taller than that space. */
+  function centerTargetY(el: HTMLElement): number {
+    const rect = el.getBoundingClientRect();
+    const docTop = rect.top + window.scrollY;
+    const vh = window.innerHeight;
+    const room = vh - HEADER_OFFSET;
+    const desiredTop = rect.height >= room - 24 ? HEADER_OFFSET : HEADER_OFFSET + (room - rect.height) / 2;
+    const maxY = Math.max(0, document.documentElement.scrollHeight - vh);
+    return Math.min(Math.max(0, docTop - desiredTop), maxY);
+  }
+
   function hideGhost() {
     ghost.style.display = 'none';
     ghost.style.transition = '';
@@ -117,7 +159,16 @@ function init() {
     ghost.style.display = 'block';
     ghost.style.opacity = '1';
     ghost.style.transformOrigin = 'top left';
-    setRect(ghost, last);
+    /* first/last are viewport rects captured at the same scroll position;
+       the ghost itself is document-anchored (position:absolute), so add
+       the current scroll offset once — the dx/dy flight deltas below are
+       scroll-invariant either way */
+    setRect(ghost, {
+      top: last.top + window.scrollY,
+      left: last.left + window.scrollX,
+      width: last.width,
+      height: last.height,
+    });
 
     const sx = last.width ? first.width / last.width : 1;
     const sy = last.height ? first.height / last.height : 1;
@@ -185,13 +236,18 @@ function init() {
        compensate for by adjusting scrollTop on its own. */
     grid.classList.add('gx-transitioning');
 
-    /* TOGGLE — one reflow. No scrollIntoView, no window.scrollTo: the
-       viewport must not move during this transition. */
+    /* TOGGLE — one reflow. No scrollIntoView. Selected Works (tier A)
+       keeps the viewport untouched; More Work (tier B) additionally glides
+       toward the vertical viewport center, concurrently with the FLIP
+       (the document-anchored ghost keeps the flight aligned while the
+       page scrolls). */
     items[i].classList.add('open');
     exps[i].hidden = false;
     cards[i].setAttribute('aria-expanded', 'true');
     applyPage(i, false);
     open = i;
+
+    const shouldCenter = items[i].dataset.tier === 'B';
 
     if (reduce) {
       medias[i].style.opacity = '1';
@@ -199,6 +255,9 @@ function init() {
       busy = false;
       grid.classList.remove('gx-transitioning');
       exps[i].focus({ preventScroll: true });
+      if (shouldCenter) {
+        window.scrollTo({ top: centerTargetY(items[i]), behavior: 'instant' as ScrollBehavior });
+      }
       return;
     }
 
@@ -215,6 +274,7 @@ function init() {
           busy = false;
           grid.classList.remove('gx-transitioning');
         });
+        if (shouldCenter) animateScrollTo(centerTargetY(items[i]), CENTER_MS);
         window.setTimeout(() => revealMeta(i, true), META_DELAY_MS - 20);
       });
     });
@@ -222,6 +282,7 @@ function init() {
 
   function closeProject(prev: number) {
     const reduce = reduceMotion();
+    cancelCenterScroll();
     revealMeta(prev, false);
 
     if (reduce) {

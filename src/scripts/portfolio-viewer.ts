@@ -9,10 +9,7 @@ const SPREAD_BREAKPOINT = 900;
 const MAX_RENDER_DPR = 2;
 const THUMB_TARGET_WIDTH = 220;
 const TURN_MS = 960;
-const STRIP_COUNT = 12;
-const STRIP_LAG = 0.16;
-const STRIP_LIFT = 5;
-const STRIP_SHADE_PEAK = 0.12;
+const TURN_SHADE_PEAK = 0.12;
 
 type Spread = number[];
 
@@ -224,18 +221,6 @@ function init() {
     slot.appendChild(canvas);
   }
 
-  async function renderPageInto(pageNum: number, slot: HTMLElement, seq: number): Promise<void> {
-    if (seq !== renderSeq) return;
-    slot.innerHTML = '';
-    slot.setAttribute('role', 'img');
-    slot.setAttribute('aria-label', `Portfolio page ${pageNum}`);
-
-    const rect = slot.getBoundingClientRect();
-    const canvas = await getOrRenderCanvas(pageNum, Math.max(1, rect.width), Math.max(1, rect.height));
-    if (!canvas || seq !== renderSeq) return;
-    slot.appendChild(canvas);
-  }
-
   function pruneCache(keepPages: Set<number>) {
     for (const [pageNum] of pageCache) {
       if (!keepPages.has(pageNum)) pageCache.delete(pageNum);
@@ -308,17 +293,25 @@ function init() {
     const isSpreadMode = mode === 'spread';
     const twoPages = spread.length === 2;
 
+    /* Render every incoming page to completion offscreen BEFORE touching
+       the visible DOM — the previous content stays up the whole time, so
+       no blank leaf or partially drawn canvas is ever on screen. */
+    const refRect = leafA.getBoundingClientRect();
+    const targetW = Math.max(1, refRect.width);
+    const targetH = Math.max(1, refRect.height);
+    const canvases = await Promise.all(
+      spread.map((p) => getOrRenderCanvas(p, targetW, targetH))
+    );
+    if (seq !== renderSeq) return;
+    if (canvases.some((c) => !c)) return;
+
     book.classList.toggle('spread', isSpreadMode);
     book.classList.toggle('single', !isSpreadMode);
     book.classList.toggle('two', twoPages);
     leafB.style.display = twoPages ? '' : 'none';
 
-    await renderPageInto(spread[0], leafA, seq);
-    if (seq !== renderSeq) return;
-    if (twoPages) {
-      await renderPageInto(spread[1], leafB, seq);
-      if (seq !== renderSeq) return;
-    }
+    attachCanvas(leafA, canvases[0]!, spread[0]);
+    if (twoPages) attachCanvas(leafB, canvases[1]!, spread[1]);
 
     maintainCache(currentSpreadIndex);
     updateChrome(currentSpreadIndex);
@@ -353,95 +346,69 @@ function init() {
   }
 
   /*
-   * Slice a narrow vertical region out of an already-rendered page canvas
-   * into its own small canvas, reusing the existing render (no PDF
-   * re-render, no quality loss beyond a plain canvas-to-canvas copy).
+   * Whole-canvas copy: the sheet's back face needs to show the incoming
+   * page while the SAME cached canvas element must later be attached to
+   * the static leaf at settle time — a cheap canvas-to-canvas copy lets
+   * both exist without re-rendering the PDF page or moving a live canvas
+   * out of the animating sheet mid-frame.
    */
-  function sliceStripCanvas(
-    source: HTMLCanvasElement,
-    index: number,
-    count: number,
-    cssW: number,
-    cssH: number
-  ): HTMLCanvasElement {
-    const srcH = source.height;
-    const sx = Math.round((index / count) * source.width);
-    const sxEnd = Math.round(((index + 1) / count) * source.width);
-    const sw = Math.max(1, sxEnd - sx);
-    const strip = document.createElement('canvas');
-    strip.width = sw;
-    strip.height = srcH;
-    strip.style.width = `${cssW}px`;
-    strip.style.height = `${cssH}px`;
-    const ctx = strip.getContext('2d');
-    if (ctx) ctx.drawImage(source, sx, 0, sw, srcH, 0, 0, sw, srcH);
-    return strip;
+  function copyCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+    const copy = document.createElement('canvas');
+    copy.width = source.width;
+    copy.height = source.height;
+    copy.style.width = source.style.width;
+    copy.style.height = source.style.height;
+    const ctx = copy.getContext('2d');
+    if (ctx) ctx.drawImage(source, 0, 0);
+    return copy;
   }
 
-  interface TurnStrip {
+  interface TurnSheet {
     el: HTMLElement;
     frontShade: HTMLElement;
     backShade: HTMLElement;
-    p: number; // normalized distance from the binding edge: 0 = at spine, 1 = outer edge
-  }
-
-  function buildStrips(
-    sheet: HTMLElement,
-    cssW: number,
-    cssH: number,
-    frontSource: HTMLCanvasElement,
-    backSource: HTMLCanvasElement,
-    direction: 1 | -1
-  ): TurnStrip[] {
-    const stripCssW = cssW / STRIP_COUNT;
-    const strips: TurnStrip[] = [];
-    for (let k = 0; k < STRIP_COUNT; k++) {
-      const leftPx = k * stripCssW;
-      const stripEl = document.createElement('div');
-      stripEl.className = 'v-turn-strip';
-      stripEl.style.left = `${leftPx}px`;
-      stripEl.style.width = `${stripCssW}px`;
-      stripEl.style.height = `${cssH}px`;
-      // Every strip pivots around the SAME shared binding axis (the sheet's
-      // own left or right edge), not its own local edge — otherwise
-      // adjacent strips would fan out independently instead of bending
-      // together as one continuous sheet.
-      const pivotX = direction === 1 ? -leftPx : cssW - leftPx;
-      stripEl.style.transformOrigin = `${pivotX}px center`;
-
-      const front = document.createElement('div');
-      front.className = 'v-turn-face v-turn-face-front';
-      front.appendChild(sliceStripCanvas(frontSource, k, STRIP_COUNT, stripCssW, cssH));
-      const frontShade = document.createElement('div');
-      frontShade.className = 'v-turn-shade';
-      front.appendChild(frontShade);
-
-      const back = document.createElement('div');
-      back.className = 'v-turn-face v-turn-face-back';
-      back.appendChild(sliceStripCanvas(backSource, k, STRIP_COUNT, stripCssW, cssH));
-      const backShade = document.createElement('div');
-      backShade.className = 'v-turn-shade';
-      back.appendChild(backShade);
-
-      stripEl.appendChild(front);
-      stripEl.appendChild(back);
-      sheet.appendChild(stripEl);
-
-      const p = direction === 1 ? k / (STRIP_COUNT - 1) : (STRIP_COUNT - 1 - k) / (STRIP_COUNT - 1);
-      strips.push({ el: stripEl, frontShade, backShade, p });
-    }
-    return strips;
   }
 
   /*
-   * One master progress value (0..1 over TURN_MS, eased) drives every
-   * strip each frame — each strip reads a slightly time-lagged version of
-   * that same progress (more lag toward the outer edge, shrinking to zero
-   * as the turn completes so every strip converges back to flat at the
-   * end), which is what produces the gentle distributed curve instead of
-   * a rigid flat board swinging on a hinge.
+   * One solid two-faced sheet: front face = the complete outgoing page,
+   * back face = the complete incoming page (pre-rotated 180deg, both with
+   * backface-visibility:hidden). The sheet rotates as ONE rigid unit
+   * around the binding edge, so the page image can never separate into
+   * visible slices — each face is a single continuous canvas.
    */
-  function runTurnAnimation(strips: TurnStrip[], direction: 1 | -1, onDone: () => void, isCancelled: () => boolean) {
+  function buildSheet(
+    sheet: HTMLElement,
+    frontSource: HTMLCanvasElement,
+    backSource: HTMLCanvasElement,
+    direction: 1 | -1
+  ): TurnSheet {
+    sheet.style.transformOrigin = direction === 1 ? 'left center' : 'right center';
+
+    const front = document.createElement('div');
+    front.className = 'v-turn-face v-turn-face-front';
+    front.appendChild(frontSource);
+    const frontShade = document.createElement('div');
+    frontShade.className = 'v-turn-shade';
+    front.appendChild(frontShade);
+
+    const back = document.createElement('div');
+    back.className = 'v-turn-face v-turn-face-back';
+    back.appendChild(copyCanvas(backSource));
+    const backShade = document.createElement('div');
+    backShade.className = 'v-turn-shade';
+    back.appendChild(backShade);
+
+    sheet.appendChild(front);
+    sheet.appendChild(back);
+    return { el: sheet, frontShade, backShade };
+  }
+
+  /*
+   * Per-frame JS drive (rather than a CSS transition) so the rotation and
+   * the shade curve share one eased progress value, and so an obsolete
+   * turn can be abandoned mid-flight via isCancelled.
+   */
+  function runTurnAnimation(turn: TurnSheet, direction: 1 | -1, onDone: () => void, isCancelled: () => boolean) {
     const start = performance.now();
     function frame(now: number) {
       if (isCancelled()) {
@@ -449,16 +416,12 @@ function init() {
         return;
       }
       const rawT = clamp01((now - start) / TURN_MS);
-      for (const s of strips) {
-        const laggedT = clamp01(rawT - STRIP_LAG * s.p * (1 - rawT));
-        const eased = turnEase(laggedT);
-        const angle = direction === 1 ? -180 * eased : 180 * eased;
-        const lift = Math.sin(eased * Math.PI) * STRIP_LIFT * (0.5 + 0.5 * s.p);
-        s.el.style.transform = `rotateY(${angle}deg) translateZ(${lift}px)`;
-        const shade = Math.sin(eased * Math.PI) * STRIP_SHADE_PEAK;
-        s.frontShade.style.opacity = String(shade);
-        s.backShade.style.opacity = String(shade);
-      }
+      const eased = turnEase(rawT);
+      const angle = direction === 1 ? -180 * eased : 180 * eased;
+      turn.el.style.transform = `rotateY(${angle}deg)`;
+      const shade = Math.sin(eased * Math.PI) * TURN_SHADE_PEAK;
+      turn.frontShade.style.opacity = String(shade);
+      turn.backShade.style.opacity = String(shade);
       if (rawT < 1) {
         requestAnimationFrame(frame);
       } else {
@@ -511,11 +474,13 @@ function init() {
     sheet.style.left = `${r.left}px`;
     sheet.style.width = `${r.width}px`;
     sheet.style.height = `${r.height}px`;
-    book.appendChild(sheet);
 
+    /* Swap the turning leaf's own content first (hidden under the sheet),
+       which detaches frontCanvas so the sheet's front face can adopt the
+       exact pixels that were on screen — no re-render, no seam. */
     attachCanvas(turningLeaf, turningLeafNewCanvas, turningLeafNewPageNum);
-
-    const strips = buildStrips(sheet, r.width, r.height, frontCanvas, backCanvas, delta);
+    const turn = buildSheet(sheet, frontCanvas, backCanvas, delta);
+    book.appendChild(sheet);
 
     let settled = false;
     function finish() {
@@ -532,7 +497,7 @@ function init() {
         finish();
         return;
       }
-      runTurnAnimation(strips, delta, finish, () => seq !== renderSeq);
+      runTurnAnimation(turn, delta, finish, () => seq !== renderSeq);
       window.setTimeout(finish, TURN_MS + 500);
     });
 
