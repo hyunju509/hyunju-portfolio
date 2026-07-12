@@ -1,21 +1,13 @@
-# Admin URL Plan (implemented later, NOT in Phase 1)
+# Admin URL (implemented in Phase 3, 2026-07-12)
 
-The hosted Studio hostname does not exist yet, so no `/admin` redirect is
-created in this phase.
+`www.hj-kim.com/admin` → 307 redirect to the deployed Sanity Studio:
 
-## Future behavior (Phase 2+)
+**https://hyunju-kim-portfolio.sanity.studio/**
 
-`www.hj-kim.com/admin` → HTTP redirect to the deployed Sanity Studio hostname
-(e.g. `https://<chosen-name>.sanity.studio`).
-
-Requirements for that redirect when it is built:
-
-- Point at the **exact** deployed Studio hostname (set after `sanity deploy`).
-- Contain no tokens or query secrets.
-- Be `noindex` (redirect page/header level).
-- Not impersonate authentication — access control is Sanity's own login.
-- Implemented as a Vercel redirect rule (e.g. `vercel.json` `redirects`), not
-  an Astro page with meta refresh.
+Implementation: `vercel.json` `redirects` (`permanent: false`, so the Studio
+hostname can still change) plus an `X-Robots-Tag: noindex` header on `/admin`.
+No tokens are involved; access control is Sanity's own login. `/admin` is not
+linked from the public navigation.
 
 ## Local development URLs
 

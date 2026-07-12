@@ -35,3 +35,9 @@ _observations-organized/
 
 # writing workflow
 _writing-inbox/
+
+# vercel project link + local env pulls
+.vercel
+.env*
+!.env.example
+!studio/.env.example
