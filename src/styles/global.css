@@ -68,6 +68,9 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 /* ---------- selected works grid (3-column editorial) ---------- */
 .selected-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:52px 24px;}
 .proj-card .thumb{position:relative;aspect-ratio:4/3;overflow:hidden;}
+/* Selected Works collapsed cards use a wider cinematic frame (ref 1079×557);
+   More Work keeps its own 4/3 declaration below. Crop is display-only. */
+.selected-grid .proj-card .thumb{aspect-ratio:1.94/1;}
 .proj-card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .25s ease-out,opacity .25s ease-out;}
 .proj-card .thumb .p2{opacity:0;}
 .proj-card:hover .thumb img,.proj-card:focus-visible .thumb img{transform:scale(1.015);}
