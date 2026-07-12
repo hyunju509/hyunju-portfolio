@@ -305,9 +305,10 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 .gx-track.gx-noanim{transition:none;}
 .gx-page{flex:0 0 auto;width:90%;margin:0;}
 .gx-page img{display:block;width:100%;height:auto;background:#fff;border:1px solid rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.03),0 14px 30px -20px rgba(0,0,0,.18);}
+/* left/right halves, matching the custom navigation cursor's two states */
 .gx-zone{position:absolute;top:0;bottom:0;z-index:2;background:transparent;}
-.gx-prev{left:0;width:18%;}
-.gx-next{right:0;width:30%;}
+.gx-prev{left:0;width:50%;}
+.gx-next{right:0;width:50%;}
 .gx-zone:disabled{cursor:default;}
 .gx-zone:focus-visible{outline:2px solid var(--ink);outline-offset:-6px;}
 .gx-count{margin:10px 0 0;font-size:11.5px;letter-spacing:.08em;color:var(--gray2);font-variant-numeric:tabular-nums;text-align:center;}
@@ -316,6 +317,18 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
    moves it together with the grid instead of desynchronizing the flight */
 .gx-ghost{position:absolute;top:0;left:0;z-index:60;display:none;pointer-events:none;overflow:hidden;background:#fff;}
 .gx-ghost img{width:100%;height:100%;object-fit:cover;display:block;}
+
+/* custom image-navigation cursor over expanded media: one fixed element
+   moved with transform from rAF (no layout work); the system cursor is
+   suppressed only on the media region and only while this is visible.
+   Hover-capable fine pointers only — touch keeps its normal behavior. */
+.gx-cursor{position:fixed;top:-20px;left:-20px;z-index:70;display:none;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid rgba(17,17,17,.55);align-items:center;justify-content:center;pointer-events:none;will-change:transform;}
+.gx-cursor svg{display:block;width:15px;height:15px;stroke:var(--ink);stroke-width:1.1;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.gx-cursor.prev svg{transform:rotate(180deg);}
+@media (hover:hover) and (pointer:fine){
+  .gx-cursor.on{display:flex;}
+  .gx-media.gx-cursor-hide,.gx-media.gx-cursor-hide .gx-zone{cursor:none;}
+}
 
 .gx-media{transition:opacity 180ms ease-out;}
 .gx-rail,.gx-count{opacity:0;transform:translateY(8px);transition:opacity 360ms cubic-bezier(.22,1,.36,1),transform 360ms cubic-bezier(.22,1,.36,1);}
@@ -332,8 +345,21 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
   .gx-close{margin-top:10px;}
   .gx-page{width:100%;}
   .gx-track{gap:4%;}
-  .gx-prev{width:32%;}
-  .gx-next{width:40%;}
+}
+
+/* Selected Works expanded: the media frame is ~two collapsed-card widths
+   (cards are (100% - 2 gaps)/3 of the row), centered with its rail in the
+   full grid row instead of stretching nearly full-width. Deliberately NO
+   aspect-ratio clamp here — Selected Works imagery keeps its natural,
+   uncropped proportions (height:auto), unlike More Work's fixed frame.
+   Size hierarchy: SW expanded (2 of 3 cols) > More Work expanded (2 of 5
+   cols) > homepage Observations thumbnails. */
+.selected-grid .gx{grid-template-columns:190px calc((100% - 48px)/3*2);justify-content:center;}
+@media (max-width:1024px){
+  .selected-grid .gx{grid-template-columns:158px minmax(0,1fr);justify-content:stretch;}
+}
+@media (max-width:760px){
+  .selected-grid .gx{grid-template-columns:1fr;}
 }
 
 /* More Work expanded refinements: the media frame is ~two collapsed-card

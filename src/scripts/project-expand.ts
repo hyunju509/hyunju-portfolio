@@ -70,6 +70,9 @@ function init() {
       const im = pages[i][p]?.querySelector('img');
       if (im) im.loading = 'eager';
     }
+    /* keep the custom nav cursor's direction/disabled/loading state in
+       sync after any image change (click, keyboard, resize re-layout) */
+    updateNavCursor();
   }
 
   function go(i: number, dir: number) {
@@ -125,6 +128,60 @@ function init() {
     const desiredTop = rect.height >= room - 24 ? HEADER_OFFSET : HEADER_OFFSET + (room - rect.height) / 2;
     const maxY = Math.max(0, document.documentElement.scrollHeight - vh);
     return Math.min(Math.max(0, docTop - desiredTop), maxY);
+  }
+
+  /*
+   * Custom image-navigation cursor over expanded media (Selected Works and
+   * More Work share this code path). One fixed, pointer-events:none element
+   * follows the pointer via transform inside a rAF; left/right halves show
+   * a left/right arrow matching the underlying half-width nav zones. It is
+   * an enhancement layered over the real buttons — the zones, ArrowLeft/
+   * ArrowRight and focus behavior are untouched. Hover-capable fine
+   * pointers only; single-image projects, disabled directions and
+   * still-loading images keep the system cursor.
+   */
+  const cursorEl = document.getElementById('gx-cursor');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let curMediaIdx = -1; // item index whose media the pointer is inside
+  let curX = 0;
+  let curY = 0;
+  let cursorRaf = 0;
+
+  function hideNavCursor() {
+    if (!cursorEl) return;
+    cursorEl.classList.remove('on');
+    if (curMediaIdx >= 0) medias[curMediaIdx].classList.remove('gx-cursor-hide');
+  }
+
+  function updateNavCursor() {
+    if (!cursorEl || curMediaIdx < 0) return;
+    const i = curMediaIdx;
+    const media = medias[i];
+    const img = pages[i][state[i]]?.querySelector('img');
+    if (img && !img.complete) img.addEventListener('load', () => updateNavCursor(), { once: true });
+    const rect = media.getBoundingClientRect();
+    const isNext = curX >= rect.left + rect.width / 2;
+    const btn = isNext ? nextBtns[i] : prevBtns[i];
+    const usable =
+      finePointer.matches &&
+      open === i &&
+      counts[i] > 1 &&
+      !!img && img.complete &&
+      !btn.disabled;
+    if (!usable) {
+      cursorEl.classList.remove('on');
+      media.classList.remove('gx-cursor-hide');
+      return;
+    }
+    cursorEl.classList.toggle('prev', !isNext);
+    cursorEl.classList.add('on');
+    media.classList.add('gx-cursor-hide');
+    if (!cursorRaf) {
+      cursorRaf = requestAnimationFrame(() => {
+        cursorRaf = 0;
+        (cursorEl as HTMLElement).style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+      });
+    }
   }
 
   function hideGhost() {
@@ -283,6 +340,8 @@ function init() {
   function closeProject(prev: number) {
     const reduce = reduceMotion();
     cancelCenterScroll();
+    hideNavCursor();
+    curMediaIdx = -1;
     revealMeta(prev, false);
 
     if (reduce) {
@@ -367,7 +426,35 @@ function init() {
     it.querySelector('.gx-close')!.addEventListener('click', () => setExpanded(-1));
     prevBtns[i].addEventListener('click', () => go(i, -1));
     nextBtns[i].addEventListener('click', () => go(i, 1));
+
+    medias[i].addEventListener('pointerenter', (e) => {
+      curMediaIdx = i;
+      curX = e.clientX;
+      curY = e.clientY;
+      updateNavCursor();
+    });
+    medias[i].addEventListener('pointermove', (e) => {
+      curMediaIdx = i;
+      curX = e.clientX;
+      curY = e.clientY;
+      updateNavCursor();
+    });
+    medias[i].addEventListener('pointerleave', () => {
+      hideNavCursor();
+      curMediaIdx = -1;
+    });
   });
+
+  /* the expansion's centering scroll moves the media under a stationary
+     pointer — re-evaluate which half (and whether the pointer is still
+     over usable media) without waiting for a pointermove */
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (curMediaIdx >= 0) updateNavCursor();
+    },
+    { passive: true }
+  );
 
   document.addEventListener('keydown', (e) => {
     if (open < 0) return;
@@ -384,6 +471,7 @@ function init() {
 
   let rt = 0;
   window.addEventListener('resize', () => {
+    hideNavCursor();
     window.clearTimeout(rt);
     rt = window.setTimeout(() => {
       if (open >= 0) applyPage(open, false);

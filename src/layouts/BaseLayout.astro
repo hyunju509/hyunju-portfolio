@@ -3,9 +3,19 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const SITE = 'https://www.hj-kim.com';
+const OG_IMAGE = `${SITE}/images/social/hyunju-kim-homepage-og.jpg`;
+const OG_IMAGE_ALT = 'Hyunju Kim architectural portfolio homepage featuring selected projects';
+
+const {
+  title,
+  description = 'Architecture shaped by climate, material cycles, and changing ways of living.',
+} = Astro.props;
+
+const canonical = `${SITE}${Astro.url.pathname}`;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -13,6 +23,23 @@ const { title } = Astro.props;
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 <title>{title}</title>
+<meta content={description} name="description" />
+<link href={canonical} rel="canonical" />
+<meta content={title} property="og:title" />
+<meta content={description} property="og:description" />
+<meta content="website" property="og:type" />
+<meta content={canonical} property="og:url" />
+<meta content={OG_IMAGE} property="og:image" />
+<meta content={OG_IMAGE} property="og:image:secure_url" />
+<meta content="image/jpeg" property="og:image:type" />
+<meta content="1200" property="og:image:width" />
+<meta content="630" property="og:image:height" />
+<meta content={OG_IMAGE_ALT} property="og:image:alt" />
+<meta content="summary_large_image" name="twitter:card" />
+<meta content={title} name="twitter:title" />
+<meta content={description} name="twitter:description" />
+<meta content={OG_IMAGE} name="twitter:image" />
+<meta content={OG_IMAGE_ALT} name="twitter:image:alt" />
 <link href="https://fonts.googleapis.com" rel="preconnect" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Archivo:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
