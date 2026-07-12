@@ -3,16 +3,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import { getBookSettings } from '../lib/sanity/content';
 
-const PDF_PUBLIC_PATH = '/documents/Hyunju_Kim_Portfolio.pdf';
-const pdfFsPath = path.resolve('public/documents/Hyunju_Kim_Portfolio.pdf');
+/* Book Settings (Sanity): editors can retitle the book or replace the PDF
+   (uploaded file or source URL) without code changes. The PDF.js viewer
+   below is unchanged. */
+const book = await getBookSettings();
+const PDF_PUBLIC_PATH = book.pdfSrc;
 
 let totalPages = 0;
 let loadError: string | null = null;
 
 try {
-  const data = fs.readFileSync(pdfFsPath);
-  const doc = await getDocument({ data: new Uint8Array(data), isEvalSupported: false }).promise;
+  let bytes: Uint8Array;
+  if (book.isRemote) {
+    const res = await fetch(book.pdfSrc);
+    if (!res.ok) throw new Error(`Fetching the PDF failed with HTTP ${res.status}`);
+    bytes = new Uint8Array(await res.arrayBuffer());
+  } else {
+    bytes = new Uint8Array(fs.readFileSync(path.resolve('public', `.${book.pdfSrc}`)));
+  }
+  const doc = await getDocument({ data: bytes, isEvalSupported: false }).promise;
   totalPages = doc.numPages;
 } catch (err) {
   loadError = err instanceof Error ? err.message : 'Unknown error loading the portfolio PDF.';
@@ -36,7 +47,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 <header class="v-top">
 <button aria-label="Return to site" class="v-back" id="v-back">&larr; Back</button>
-<span class="v-chapter" id="v-chapter">Portfolio</span>
+<span class="v-chapter" id="v-chapter">{book.title}</span>
 <span aria-live="polite" class="v-count" id="v-count">{`01 / ${pad(totalPages)}`}</span>
 </header>
 

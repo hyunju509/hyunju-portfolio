@@ -1,18 +1,20 @@
 ---
 import '../styles/global.css';
+import { getSeoDefaults } from '../lib/sanity/content';
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const SITE = 'https://www.hj-kim.com';
-const OG_IMAGE = `${SITE}/images/social/hyunju-kim-homepage-og.jpg`;
-const OG_IMAGE_ALT = 'Hyunju Kim architectural portfolio homepage featuring selected projects';
+const seo = await getSeoDefaults();
+const SITE = seo.site;
+const OG_IMAGE = seo.ogImage ?? `${SITE}/images/social/hyunju-kim-homepage-og.jpg`;
+const OG_IMAGE_ALT = seo.ogImageAlt;
 
 const {
   title,
-  description = 'Architecture shaped by climate, material cycles, and changing ways of living.',
+  description = seo.defaultDescription,
 } = Astro.props;
 
 const canonical = `${SITE}${Astro.url.pathname}`;

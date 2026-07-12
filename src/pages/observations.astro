@@ -2,7 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { OBSERVATION_LOCATIONS, IMAGE_STUDIES, IMAGE_STUDY_CATEGORIES } from '../data/observations';
+import { getObservationsData, getSiteSettings } from '../lib/sanity/content';
+
+/* Sanity (published) — reproduces the exact legacy registry shapes. */
+const { locations: OBSERVATION_LOCATIONS, studies: IMAGE_STUDIES, categories: IMAGE_STUDY_CATEGORIES } =
+  await getObservationsData();
+const settings = await getSiteSettings();
 
 const EAGER_COUNT = 8; // covers the widest first-row column count (7) plus one
 let renderedIndex = 0;
@@ -19,18 +24,18 @@ const studyCategoryTitles = Object.fromEntries(IMAGE_STUDY_CATEGORIES.map((c) =>
 
 <section class="observations-intro">
 <h1>Observations</h1>
-<p>Photographs, places, and image studies gathered through living, studying, traveling, and making.</p>
+<p>{settings.observationsIntro}</p>
 </section>
 
 <nav class="obs-subnav" aria-label="Observations sections">
-  <a class="obs-subnav-link" data-target="places" href="#places">Places</a>
-  <a class="obs-subnav-link" data-target="writing" href="#writing">Writing</a>
-  <a class="obs-subnav-link" data-target="image-studies" href="#image-studies">Image Studies</a>
+  <a class="obs-subnav-link" data-target="places" href="#places">{settings.placesLabel ?? 'Places'}</a>
+  <a class="obs-subnav-link" data-target="writing" href="#writing">{settings.writingLabel ?? 'Writing'}</a>
+  <a class="obs-subnav-link" data-target="image-studies" href="#image-studies">{settings.imageStudiesLabel ?? 'Image Studies'}</a>
 </nav>
 
 <section class="observations-section" id="places">
-<h2>Places</h2>
-<p>Photographs from cities lived in, studied in, and visited.</p>
+<h2>{settings.placesLabel ?? 'Places'}</h2>
+<p>{settings.placesIntro}</p>
 
 <div class="obs-filters" role="group" aria-label="Filter photographs by location">
   <button class="obs-filter" data-slug="all" aria-pressed="true" type="button">All</button>
@@ -73,14 +78,14 @@ const studyCategoryTitles = Object.fromEntries(IMAGE_STUDY_CATEGORIES.map((c) =>
 </section>
 
 <section class="observations-section observations-writing" id="writing">
-<h2>Writing</h2>
-<p>Research essays, interactive data studies, and urban field notes.</p>
-<a class="obs-writing-link" href="/observations/writing">Read Writing <span aria-hidden="true">&rarr;</span></a>
+<h2>{settings.writingLabel ?? 'Writing'}</h2>
+<p>{settings.writingIntro}</p>
+<a class="obs-writing-link" href="/observations/writing">Read {settings.writingLabel ?? 'Writing'} <span aria-hidden="true">&rarr;</span></a>
 </section>
 
 <section class="observations-section" id="image-studies">
-<h2>Image Studies</h2>
-<p>AI-assisted studies exploring material behavior, atmosphere, and speculative spatial conditions.</p>
+<h2>{settings.imageStudiesLabel ?? 'Image Studies'}</h2>
+<p>{settings.imageStudiesIntro}</p>
 
 <div class="obs-categories-legend">
 {IMAGE_STUDY_CATEGORIES.map((cat) => (

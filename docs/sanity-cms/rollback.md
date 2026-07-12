@@ -1,3 +1,18 @@
+# CMS Rollback
+
+## Final content migration (Writing / Places / Image Studies / About / Site / Book)
+
+The legacy registries are retained for rollback:
+
+- `src/data/writing.ts`, `src/data/observations.ts` — still in the repo
+- About arrays — preserved verbatim inside `studio/scripts/import-content.ts`
+- The Book PDF stays at `public/documents/` (never moved to Sanity)
+
+To roll back a single area, revert the corresponding page/component to its
+pre-migration data import (git history of commit "Complete Sanity CMS
+migration") — every page switch was data-source-only, so reverting the
+frontmatter import restores the legacy rendering exactly.
+
 # Phase 1 / 2A Rollback
 
 The public site never depended on Sanity during Phase 1, so rollback is pure

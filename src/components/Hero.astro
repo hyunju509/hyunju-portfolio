@@ -1,9 +1,15 @@
 ---
+import { getSiteSettings } from '../lib/sanity/content';
+
+const settings = await getSiteSettings();
+const statementLines = settings.homepageIntroduction.split('\n');
 ---
 <section class="hero">
-<h1 class="sr-only">Hyunju Kim — Architectural Designer</h1>
+<h1 class="sr-only">Hyunju Kim — {settings.professionalTitle ?? 'Architectural Designer'}</h1>
 <div class="hero-foot">
-<p class="statement">Architecture shaped by climate, material cycles,<br />and changing ways of living.</p>
+<p class="statement">{statementLines.map((line, i) => (
+  <>{i > 0 && <br />}{line}</>
+))}</p>
 <a class="viewwork" href="#work">View Work<span aria-hidden="true">&nbsp;&darr;</span></a>
 </div>
 </section>

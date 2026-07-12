@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-07-12T06:38:31.041Z",
+  "phase": "final-content-migration",
+  "writing": {
+    "the-invisible-layers": "draft-created",
+    "when-buildings-stop-breathing": "draft-created",
+    "from-form-to-symbol": "draft-created",
+    "feelback-loop": "draft-created",
+    "reading-new-york": "draft-created"
+  },
+  "placeImageCounts": {
+    "japan": 41,
+    "jeju": 0,
+    "los-angeles": 12,
+    "las-vegas": 16,
+    "melbourne": 0,
+    "new-york": 5,
+    "seoul": 0,
+    "singapore": 0,
+    "uluru": 0
+  },
+  "imageStudyCounts": {
+    "material-experiments": 6,
+    "spatial-images": 31
+  },
+  "totals": {
+    "assetsUploaded": 4,
+    "assetsReused": 108
+  }
+}

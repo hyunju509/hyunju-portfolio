@@ -2,7 +2,10 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
-import { ARTICLES } from '../../../data/writing';
+import { getPublishedWriting } from '../../../lib/sanity/content';
+
+/* Sanity (published perspective): drafts and hidden articles never appear. */
+const ARTICLES = await getPublishedWriting();
 ---
 <BaseLayout title="Writing — Observations — Hyunju Kim">
 <Header />
@@ -15,6 +18,9 @@ import { ARTICLES } from '../../../data/writing';
 </section>
 
 <section class="wr-list" aria-label="Articles">
+{ARTICLES.length === 0 && (
+  <p class="wr-empty">Essays are currently being prepared for publication.</p>
+)}
 {ARTICLES.map((a) => (
   <article class="wr-row">
     <span class="wr-num">{a.number}</span>
@@ -81,6 +87,15 @@ import { ARTICLES } from '../../../data/writing';
 /* ---------- editorial index rows ---------- */
 .wr-list {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wr-empty {
+  padding: 36px 0;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .wr-row {

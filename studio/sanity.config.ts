@@ -8,7 +8,7 @@ const projectId = process.env.SANITY_STUDIO_PROJECT_ID!
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
 
 /* Document types that must only ever exist as a single document. */
-const SINGLETONS = ['homepageSettings']
+const SINGLETONS = ['homepageSettings', 'writingOrder', 'aboutSettings', 'siteSettings', 'bookSettings']
 
 export default defineConfig({
   name: 'default',

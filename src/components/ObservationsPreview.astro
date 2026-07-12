@@ -1,20 +1,20 @@
 ---
-import { getFeaturedPlaces, getFeaturedImageStudies, IMAGE_STUDY_CATEGORIES } from '../data/observations';
+import { getFeaturedPreviews } from '../lib/sanity/content';
 
-const places = getFeaturedPlaces();
-const studies = getFeaturedImageStudies();
-const categoryTitles = Object.fromEntries(IMAGE_STUDY_CATEGORIES.map((c) => [c.slug, c.title]));
+/* Sanity-controlled selections (Site Settings → Homepage Observations
+   preview): exactly 8 + 8, validated at build time. */
+const { places, studies, intro, placesLabel, imageStudiesLabel } = await getFeaturedPreviews();
 ---
 <section class="home-obs" id="home-observations">
   <div class="home-obs-head">
     <h2>Observations</h2>
-    <p>Photographs, places, and AI-assisted image studies gathered through travel, observation, and iterative making.</p>
+    <p>{intro}</p>
   </div>
 
   <div class="home-obs-group">
     <div class="home-obs-group-head">
-      <h3>Places</h3>
-      <a href="/observations#places">View Places <span aria-hidden="true">&rarr;</span></a>
+      <h3>{placesLabel}</h3>
+      <a href="/observations#places">View {placesLabel} <span aria-hidden="true">&rarr;</span></a>
     </div>
     <div class="home-obs-grid">
       {places.map((p) => (
@@ -28,14 +28,14 @@ const categoryTitles = Object.fromEntries(IMAGE_STUDY_CATEGORIES.map((c) => [c.s
 
   <div class="home-obs-group">
     <div class="home-obs-group-head">
-      <h3>Image Studies</h3>
-      <a href="/observations#image-studies">View Image Studies <span aria-hidden="true">&rarr;</span></a>
+      <h3>{imageStudiesLabel}</h3>
+      <a href="/observations#image-studies">View {imageStudiesLabel} <span aria-hidden="true">&rarr;</span></a>
     </div>
     <div class="home-obs-grid">
       {studies.map((s) => (
-        <a class="home-obs-tile" href="/observations#image-studies" aria-label={`View ${categoryTitles[s.category]} in Observations`}>
+        <a class="home-obs-tile" href="/observations#image-studies" aria-label={`View ${s.title} in Observations`}>
           <img src={s.thumb} alt="" width="600" height="600" loading="lazy" decoding="async" />
-          <span class="home-obs-tile-label" aria-hidden="true">{categoryTitles[s.category]}</span>
+          <span class="home-obs-tile-label" aria-hidden="true">{s.title}</span>
         </a>
       ))}
     </div>

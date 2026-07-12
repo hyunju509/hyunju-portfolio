@@ -1,9 +1,13 @@
 ---
+import { getSiteSettings } from '../lib/sanity/content';
+
+const settings = await getSiteSettings();
+const nav = settings.navLabels ?? {};
 ---
 <header class="top">
-<a class="who" href="/"><b>Architectural Designer</b><span>Hyunju Kim</span><em>LEED AP BD+C</em></a>
+<a class="who" href="/"><b>{settings.professionalTitle ?? 'Architectural Designer'}</b><span>Hyunju Kim</span><em>{settings.credentialLine ?? ''}</em></a>
 <a class="mono" href="/">Hyunju Kim</a>
 <div class="nav">
-<span class="pages"><a href="/">Work</a><a href="/portfolio">Book</a><a href="/about">About</a><a href="/observations">Observations</a><a href="mailto:hyunju.kim.0509@gmail.com">Email</a></span>
+<span class="pages"><a href="/">{nav.work ?? 'Work'}</a><a href="/portfolio">{nav.book ?? 'Book'}</a><a href="/about">{nav.about ?? 'About'}</a><a href="/observations">{nav.observations ?? 'Observations'}</a><a href={`mailto:${settings.email}`}>{nav.email ?? 'Email'}</a></span>
 </div>
 </header>

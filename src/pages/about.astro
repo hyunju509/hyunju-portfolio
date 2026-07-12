@@ -4,89 +4,11 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import InfoLedger from '../components/InfoLedger.astro';
 import AwardsLedger from '../components/AwardsLedger.astro';
+import { getAboutContent } from '../lib/sanity/content';
 
-const education = [
-  {
-    key: "2025.05 — 2026.05",
-    main: ["Columbia University GSAPP", "M.S. Advanced Architectural Design", "New York, United States"],
-    detail: ["High Pass Studio Work:", "Fluid Terrain", "Shadow Archive", "Ivanpah Solar Sanctuary"],
-  },
-  {
-    key: "2019.03 — 2025.02",
-    main: ["Kookmin University", "B.Arch, Architectural Design", "Seoul, Korea"],
-    detail: ["GPA 4.26 / 4.5", "Graduated 2nd in Class"],
-  },
-  {
-    key: "2021 — 2022",
-    main: ["RMIT University", "Exchange Program in Architecture", "Melbourne, Australia"],
-  },
-];
-
-const projects = [
-  {
-    key: "Calibrated Environment",
-    main: ["New York, NY", "Mixed Use Tower · Revit + Ladybug"],
-    detail: [
-      "Conducted daylight and thermal comfort analysis in Ladybug to inform the building envelope, setbacks, and terrace strategies.",
-      "Translated environmental analysis into massing diagrams, facade studies, and design development documentation.",
-      "Produced Revit plans, sections, elevations, facade studies, and residential layouts.",
-    ],
-  },
-  {
-    key: "Fluid Terrain",
-    main: ["Santa Paula Creek, CA", "Hydrological Landscape Infrastructure · Material Ecology + Passive Cooling"],
-    detail: [
-      "Designed a landscape system that adapts to flooding through gabion foundations, terraced ground, and porous infrastructure.",
-      "Synthesized hydrological sections connecting water flow, material cycles, passive cooling, and seasonal public use.",
-      "Visualized ecological performance through 3D views, assembly studies, and detail drawings.",
-    ],
-  },
-  {
-    key: "Ordinary Village: Hide and Seek",
-    main: ["Seoul, Korea", "Interactive Residential Village · Adaptive Domestic Space"],
-    detail: [
-      "Designed a residential village using movable partitions and shifting boundaries to negotiate privacy and shared space.",
-      "Studied interior reconfiguration through tilting walls, rotating columns, and sensor responsive elements.",
-      "Produced plans, sections, interior diagrams, and renderings showing flexible domestic layouts.",
-    ],
-  },
-  {
-    key: "Surreal Museum Tower",
-    main: ["New York, NY", "Vertical Museum Prototype · Spatial Sequence + Facade Study"],
-    detail: [
-      "Designed a vertical museum integrated into a commercial tower in Times Square.",
-      "Developed nonlinear circulation sequences and floor plans connecting museum, public, and commercial programs.",
-      "Produced sectional drawings, layered moiré facade studies, and presentation renderings.",
-    ],
-  },
-  {
-    key: "Shadow Archive: Inverse Preserve",
-    main: ["Churchill, Canada", "Environmental Research Archive · Climate Research + Sectional Design"],
-    detail: [
-      "Proposed a distributed network of Arctic research outposts responding to permafrost thaw, solar exposure, and ultraviolet and infrared environmental fields.",
-      "Tested roof geometries and shadow zones to mediate solar exposure and ground thaw conditions.",
-      "Generated sectional drawings and environmental diagrams connecting archives, habitats, and climate responsive occupation.",
-    ],
-  },
-];
-
-const awards = [
-  { key: "2026.05", title: "GSAPP End of Year Show", detail: "Fluid Terrain" },
-  { key: "2025.07", title: "Climate - Models - Images, New York", detail: "Ivanpah Solar Sanctuary" },
-  { key: "2024.07", title: "Sensory Museum 2024 — Honorable Mention", detail: "Surreal Museum Tower", url: "https://www.archiol.org/result/sensory-museum-2024", external: true },
-  { key: "2022.11", title: "Fondation Jacques Rougerie — Focus Prize", detail: "Space Urchin · Architecture and Innovation for Space", url: "https://www.fondation-jacques-rougerie.com/en/news-and-events/2022-prize-list/", external: true },
-  { key: "2021.02", title: "Sejong National Pilot Smart City Design Competition", detail: "5th Prize" },
-  { key: "2019.12", title: "Dokdo Guesthouse Design International Competition", detail: "Excellence Award" },
-];
-
-const skillGroups = [
-  { title: "Modeling & BIM", items: ["Rhinoceros", "Revit", "AutoCAD"] },
-  { title: "Computation & Analysis", items: ["Grasshopper", "Python", "QGIS", "Ladybug", "CFD Simulation"] },
-  { title: "Visualization", items: ["V-Ray", "D5 Render", "Enscape", "Unreal Engine"] },
-  { title: "Adobe Suite", items: ["Photoshop", "Illustrator", "InDesign", "After Effects", "Premiere Pro"] },
-  { title: "Fabrication", items: ["Laser Cutting", "3D Printing", "Digital Fabrication"] },
-  { title: "Additional", items: ["Environmental Analysis", "Diagramming", "Presentation Layouts"] },
-];
+/* Sanity (published) — the About singleton reproduces the legacy shapes. */
+const about = await getAboutContent();
+const { education, selectedProjects: projects, awards, skillGroups } = about;
 ---
 <BaseLayout title="About — Hyunju Kim">
 <Header />
@@ -100,13 +22,11 @@ const skillGroups = [
 <div class="info-intro">
 <h1 class="info-title">About</h1>
 <div class="info-bio">
-<p>Hyunju Kim is an architectural designer based in New York whose work moves across architecture, landscape, and environmental systems. Her work explores how climate, material cycles, and patterns of occupation can become spatial and technical strategies across building and landscape scales.</p>
-<p>Her process combines design development in Revit and Rhino with environmental analysis, computational workflows, visualization, and architectural documentation. Recent work ranges from mixed use towers and adaptive housing to flood infrastructure and environmental research archives.</p>
-<p>She holds an M.S. in Advanced Architectural Design from Columbia GSAPP, a B.Arch from Kookmin University, and the LEED AP BD+C credential.</p>
+{about.introduction.map((p) => <p>{p}</p>)}
 <ul class="info-facts">
-<li>New York, NY</li>
-<li><a href="mailto:hyunju.kim.0509@gmail.com">hyunju.kim.0509@gmail.com</a></li>
-<li>LEED AP BD+C</li>
+{about.location && <li>{about.location}</li>}
+<li><a href={`mailto:${about.email}`}>{about.email}</a></li>
+{about.credential?.name && <li>{about.credential.name}</li>}
 </ul>
 </div>
 </div>
@@ -131,17 +51,19 @@ const skillGroups = [
   </div>
 ))}
 </div>
+{about.credential?.name && (
 <div class="credential">
-<span class="credential-name">LEED AP BD+C</span>
-<span class="credential-date">2026.06</span>
+<span class="credential-name">{about.credential.name}</span>
+<span class="credential-date">{about.credential.date}</span>
 </div>
+)}
 </section>
 
 <section class="info-section info-contact-section">
 <h2 class="info-h2">Contact</h2>
 <div class="info-contact">
-<span>New York, NY</span>
-<a href="mailto:hyunju.kim.0509@gmail.com">hyunju.kim.0509@gmail.com</a>
+{about.location && <span>{about.location}</span>}
+<a href={`mailto:${about.email}`}>{about.email}</a>
 <a class="viewwork" href="/">Work<span aria-hidden="true">&nbsp;&rarr;</span></a>
 </div>
 </section>

@@ -1,7 +1,10 @@
 ---
+import { getSiteSettings } from '../lib/sanity/content';
+
+const settings = await getSiteSettings();
 ---
 <footer class="foot">
-<div class="base"><span>© 2026 Hyunju Kim</span><span class="flinks"><a href="mailto:hyunju.kim.0509@gmail.com">Email</a><a href="#top-anchor">Back to top</a></span></div>
+<div class="base"><span>© 2026 Hyunju Kim</span><span class="flinks"><a href={`mailto:${settings.email}`}>Email</a><a href="#top-anchor">Back to top</a></span></div>
 </footer>
 <div class="bar">
 <span class="clock seoul">Seoul <span id="clk-seoul">—</span></span>

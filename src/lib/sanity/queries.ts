@@ -53,3 +53,80 @@ export const HOMEPAGE_PROJECTS = `*[_type == "homepageSettings" && _id == "homep
   selectedWorks[]->{${PROJECT_FIELDS}},
   moreWorks[]->{${PROJECT_FIELDS}}
 }`;
+
+/* ---- Final content migration (Writing / Places / Image Studies / About / Site / Book) ---- */
+
+const OBS_GALLERY = `gallery[]{
+  _key,
+  alt,
+  caption,
+  sequenceLabel,
+  homepageFeatured,
+  image ${IMAGE_PROJECTION}
+}`;
+
+export const ALL_PLACES = `*[_type == "place" && showOnSite != false] | order(displayOrder asc, title asc){
+  _id,
+  title,
+  "slug": slug.current,
+  displayOrder,
+  ${OBS_GALLERY}
+}`;
+
+export const ALL_IMAGE_STUDY_COLLECTIONS = `*[_type == "imageStudyCollection" && showOnSite != false] | order(displayOrder asc, title asc){
+  _id,
+  title,
+  "slug": slug.current,
+  category,
+  description,
+  disclosure,
+  displayOrder,
+  ${OBS_GALLERY}
+}`;
+
+export const SITE_SETTINGS = `*[_type == "siteSettings" && _id == "siteSettings"][0]{
+  ...,
+  defaultSocialImage ${IMAGE_PROJECTION},
+  featuredPlaces[]{
+    _key,
+    place->{ title, "slug": slug.current },
+    image ${IMAGE_PROJECTION}
+  },
+  featuredImageStudies[]{
+    _key,
+    collection->{ title, "slug": slug.current, category },
+    image ${IMAGE_PROJECTION}
+  }
+}`;
+
+export const ABOUT_SETTINGS = `*[_type == "aboutSettings" && _id == "aboutSettings"][0]`;
+
+export const BOOK_SETTINGS = `*[_type == "bookSettings" && _id == "bookSettings"][0]{
+  ...,
+  "pdfFileUrl": pdfFile.asset->url
+}`;
+
+const WRITING_FIELDS = `
+  _id,
+  title,
+  "slug": slug.current,
+  subtitle,
+  articleType,
+  institution,
+  year,
+  summary,
+  body,
+  references,
+  externalUrl,
+  externalUrlLabel,
+  externalUrlCredit,
+  collaborators,
+  showOnSite,
+  featured
+`;
+
+/* Published, visible articles in Writing Order (weak refs resolve to null
+   for drafts and are filtered out). */
+export const PUBLISHED_WRITING = `*[_type == "writingOrder" && _id == "writingOrder"][0]{
+  "articles": articles[]->{${WRITING_FIELDS}}
+}`;

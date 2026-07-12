@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-07-12T06:46:36.806Z",
+  "phase": "final-content-migration",
+  "result": "PASS",
+  "writing": {
+    "total": 5,
+    "published": 0,
+    "drafts": 5,
+    "externalLinkPreserved": true,
+    "publishedPlaceholders": 0
+  },
+  "places": {
+    "locations": 9,
+    "totalImages": 74,
+    "orderMatches": true,
+    "perLocation": [
+      {
+        "slug": "japan",
+        "images": 41
+      },
+      {
+        "slug": "jeju",
+        "images": 0
+      },
+      {
+        "slug": "los-angeles",
+        "images": 12
+      },
+      {
+        "slug": "las-vegas",
+        "images": 16
+      },
+      {
+        "slug": "melbourne",
+        "images": 0
+      },
+      {
+        "slug": "new-york",
+        "images": 5
+      },
+      {
+        "slug": "seoul",
+        "images": 0
+      },
+      {
+        "slug": "singapore",
+        "images": 0
+      },
+      {
+        "slug": "uluru",
+        "images": 0
+      }
+    ]
+  },
+  "imageStudies": [
+    {
+      "category": "material-experiments",
+      "images": 6,
+      "disclosure": true
+    },
+    {
+      "category": "spatial-images",
+      "images": 31,
+      "disclosure": true
+    }
+  ],
+  "about": {
+    "awards": 6,
+    "edu": 3,
+    "email": "hyunju.kim.0509@gmail.com",
+    "exp": 5,
+    "intro": 3,
+    "skills": 6
+  },
+  "siteSettings": {
+    "featuredPlaces": 8,
+    "featuredImageStudies": 8
+  },
+  "book": {
+    "pdfSource": "/documents/Hyunju_Kim_Portfolio.pdf"
+  },
+  "issues": []
+}

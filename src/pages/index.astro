@@ -6,8 +6,11 @@ import LegacyWorkGrid from '../components/LegacyWorkGrid.astro';
 import ObservationsPreview from '../components/ObservationsPreview.astro';
 import Footer from '../components/Footer.astro';
 import ProjectRooms from '../components/ProjectRooms.astro';
+import { getSiteSettings } from '../lib/sanity/content';
+
+const settings = await getSiteSettings();
 ---
-<BaseLayout title="Hyunju Kim — Architectural Designer">
+<BaseLayout title={settings.seoDefaultTitle}>
 <Header />
 <Hero />
 <LegacyWorkGrid />
