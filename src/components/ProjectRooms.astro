@@ -1,6 +1,10 @@
 ---
-import { PROJECTS, pad, sheetPath } from '../data/projects';
+import { pad, sheetPath } from '../data/projects';
+import { getHomepageProjects } from '../lib/sanity/homepage';
 import YouTubePlayer from './YouTubePlayer.astro';
+
+const { tierA, tierB } = await getHomepageProjects();
+const PROJECTS = [...tierA, ...tierB];
 ---
 {PROJECTS.map((p, i) => (
 <article aria-hidden="true" class="room" id={`room-${p.id}`}>

@@ -1,0 +1,229 @@
+---
+/*
+ * LOCAL CMS PILOT — Phase 1 comparison page. Not linked from navigation,
+ * noindex. Renders the same project twice: A from the local registry
+ * (current production source), B from Sanity (published perspective only),
+ * plus an automated field-by-field comparison.
+ */
+import { PROJECTS, sheetPath, sheetDims } from '../../data/projects';
+import { sanityClient, sanityConfigured } from '../../lib/sanity/client';
+import { PROJECT_BY_SLUG } from '../../lib/sanity/queries';
+import type { SanityProject } from '../../lib/sanity/types';
+import { urlFor, srcsetFor } from '../../lib/sanity/image';
+
+const local = PROJECTS.find((p) => p.slug === 'fluid-terrain');
+if (!local) throw new Error('fluid-terrain missing from local registry');
+const localMeta = Object.fromEntries(local.meta.map((m) => [m.k, m.v]));
+const localFiles = local.sheets.map((s) => (typeof s === 'string' ? s : s.file));
+
+/* Development-only tooling: production builds emit a stub with no content. */
+const DEV = import.meta.env.DEV;
+
+let cms: SanityProject | null = null;
+let cmsError: string | null = null;
+if (!DEV) {
+  cmsError = 'CMS preview is available in development only.';
+} else if (!sanityConfigured) {
+  cmsError = 'Sanity is not configured — set SANITY_PROJECT_ID in .env and rebuild.';
+} else {
+  try {
+    cms = await sanityClient.fetch<SanityProject | null>(PROJECT_BY_SLUG, {
+      slug: 'fluid-terrain',
+    });
+    if (!cms) cmsError = 'No published "fluid-terrain" project document found in Sanity.';
+  } catch (e) {
+    cmsError = `Sanity query failed: ${e instanceof Error ? e.message : String(e)}`;
+  }
+}
+
+interface Check {
+  label: string;
+  pass: boolean;
+  detail: string;
+}
+const checks: Check[] = [];
+if (cms) {
+  const gallery = cms.gallery ?? [];
+  const cmsFiles = gallery.map((g) => g.image.asset.originalFilename ?? '?');
+  checks.push(
+    { label: 'Title', pass: cms.title === local.title, detail: `"${cms.title}" vs "${local.title}"` },
+    { label: 'Period', pass: cms.period === localMeta['Period'], detail: `"${cms.period}"` },
+    { label: 'Location', pass: cms.location === localMeta['Location'], detail: `"${cms.location}"` },
+    { label: 'Program', pass: cms.program === localMeta['Program'], detail: `"${cms.program}"` },
+    { label: 'Credits', pass: cms.credits === localMeta['Credits'], detail: `"${cms.credits}"` },
+    {
+      label: 'Short description',
+      pass: cms.shortDescription === local.desc,
+      detail: cms.shortDescription === local.desc ? 'exact match' : 'DIFFERS',
+    },
+    {
+      label: 'Image count',
+      pass: gallery.length === local.sheets.length,
+      detail: `${gallery.length} vs ${local.sheets.length}`,
+    },
+    {
+      label: 'Image order',
+      pass: cmsFiles.join('|') === localFiles.join('|'),
+      detail: cmsFiles.join(', '),
+    },
+    {
+      label: 'Alt text on every image',
+      pass: gallery.every((g) => Boolean(g.alt)),
+      detail: `${gallery.filter((g) => Boolean(g.alt)).length}/${gallery.length}`,
+    },
+    {
+      label: 'No duplicate assets',
+      pass: new Set(gallery.map((g) => g.image.asset._id)).size === gallery.length,
+      detail: `${new Set(gallery.map((g) => g.image.asset._id)).size} unique of ${gallery.length}`,
+    },
+    {
+      label: 'Dimensions preserved',
+      pass: gallery.every((g, i) => {
+        const d = sheetDims(local.sheets[i] ?? local.sheets[0]);
+        const m = g.image.asset.metadata.dimensions;
+        return m.width === d.width && m.height === d.height;
+      }),
+      detail: gallery
+        .map((g) => `${g.image.asset.metadata.dimensions.width}×${g.image.asset.metadata.dimensions.height}`)
+        .join(', '),
+    },
+  );
+}
+const allPass = checks.length > 0 && checks.every((c) => c.pass);
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<meta content="noindex, nofollow" name="robots" />
+<title>CMS Pilot — Fluid Terrain comparison</title>
+</head>
+<body>
+{!DEV && <p style="padding:24px;font:14px system-ui">CMS preview is available in development only.</p>}
+{DEV && <div class="wrap">
+  <p class="banner">Local CMS pilot — Phase 1 comparison. Not part of the public site.</p>
+
+  <h1>Fluid Terrain — Local registry vs Sanity CMS</h1>
+
+  <section class="report">
+    <h2>Automated comparison {cms ? (allPass ? '— ALL PASS' : '— MISMATCHES FOUND') : ''}</h2>
+    {cmsError && <p class="err">{cmsError}</p>}
+    {cms && (
+      <table>
+        <thead><tr><th>Check</th><th>Result</th><th>Detail</th></tr></thead>
+        <tbody>
+          {checks.map((c) => (
+            <tr class={c.pass ? 'pass' : 'fail'}>
+              <td>{c.label}</td>
+              <td>{c.pass ? 'PASS' : 'FAIL'}</td>
+              <td>{c.detail}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </section>
+
+  <div class="cols">
+    <section class="col">
+      <h2>A — Existing local version</h2>
+      <h3>{local.title}</h3>
+      <p class="meta-line">{local.cardMeta}</p>
+      <dl>
+        {local.meta.map((m) => (
+          <div><dt>{m.k}</dt><dd>{m.v}</dd></div>
+        ))}
+      </dl>
+      <p class="desc">{local.desc}</p>
+      {local.sheets.map((s, i) => {
+        const d = sheetDims(s);
+        return (
+          <figure>
+            <img
+              src={sheetPath(local, s)}
+              width={d.width}
+              height={d.height}
+              alt={`${local.title} — sheet ${i + 1} of ${local.sheets.length}`}
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>{typeof s === 'string' ? s : s.file}</figcaption>
+          </figure>
+        );
+      })}
+    </section>
+
+    <section class="col">
+      <h2>B — Sanity CMS version (published perspective)</h2>
+      {cmsError && <p class="err">{cmsError}</p>}
+      {cms && (
+        <>
+          <h3>{cms.title}</h3>
+          <p class="meta-line">{cms.year} · {cms.projectType}</p>
+          <dl>
+            {cms.period && <div><dt>Period</dt><dd>{cms.period}</dd></div>}
+            {cms.location && <div><dt>Location</dt><dd>{cms.location}</dd></div>}
+            {cms.program && <div><dt>Program</dt><dd>{cms.program}</dd></div>}
+            {cms.credits && <div><dt>Credits</dt><dd>{cms.credits}</dd></div>}
+            {cms.keywords && cms.keywords.length > 0 && (
+              <div><dt>Keywords</dt><dd>{cms.keywords.join(' · ')}</dd></div>
+            )}
+          </dl>
+          <p class="desc">{cms.shortDescription}</p>
+          {(cms.gallery ?? []).map((g) => {
+            const dim = g.image.asset.metadata.dimensions;
+            return (
+              <figure>
+                <img
+                  src={urlFor(g.image).width(1372).url()}
+                  srcset={srcsetFor(g.image, [686, 1372])}
+                  sizes="(max-width: 900px) 92vw, 44vw"
+                  width={dim.width}
+                  height={dim.height}
+                  alt={g.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>
+                  {g.image.asset.originalFilename}
+                  {g.caption ? ` — ${g.caption}` : ''}
+                </figcaption>
+              </figure>
+            );
+          })}
+        </>
+      )}
+    </section>
+  </div>
+</div>}
+
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.6 system-ui, sans-serif; color: #111; background: #fafaf8; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 24px 3vw 80px; }
+  .banner { background: #111; color: #fff; padding: 8px 14px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; display: inline-block; }
+  h1 { font-size: 22px; margin: 18px 0 26px; }
+  h2 { font-size: 15px; margin: 0 0 14px; letter-spacing: 0.04em; text-transform: uppercase; }
+  h3 { font-size: 19px; margin: 0 0 4px; }
+  .report { margin-bottom: 36px; }
+  table { border-collapse: collapse; width: 100%; max-width: 860px; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr.pass td:nth-child(2) { color: #1a7f37; font-weight: 600; }
+  tr.fail td:nth-child(2) { color: #b42318; font-weight: 700; }
+  .err { color: #b42318; font-weight: 600; max-width: 640px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; align-items: start; }
+  .col { min-width: 0; }
+  .meta-line { color: #666; margin: 0 0 14px; }
+  dl { margin: 0 0 16px; }
+  dl div { margin-bottom: 6px; }
+  dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #888; }
+  dd { margin: 0; }
+  .desc { max-width: 560px; margin: 0 0 22px; }
+  figure { margin: 0 0 20px; }
+  img { display: block; width: 100%; height: auto; border: 1px solid #e2e2de; }
+  figcaption { font-size: 11px; color: #888; margin-top: 5px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</body>
+</html>

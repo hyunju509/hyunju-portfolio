@@ -1,9 +1,11 @@
 ---
-import { PROJECTS } from '../data/projects';
 import GridItem from './GridItem.astro';
+import { getHomepageProjects } from '../lib/sanity/homepage';
 
-const tierA = PROJECTS.filter((p) => p.tier === 'A');
-const tierB = PROJECTS.filter((p) => p.tier === 'B');
+/* Production source: Sanity (published perspective, build time only).
+   The legacy registry in src/data/projects.ts is retained for comparison
+   tooling and rollback — see docs/sanity-cms/rollback.md. */
+const { tierA, tierB } = await getHomepageProjects();
 ---
 <main class="work" id="work">
 <div id="grid">

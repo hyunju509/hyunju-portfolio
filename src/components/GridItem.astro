@@ -10,8 +10,8 @@ const { p, i } = Astro.props;
 <article class="gitem" data-id={p.id} data-index={i} data-tier={p.tier}>
   <figure aria-expanded="false" aria-label={`Expand ${p.title} project`} class="proj-card" data-id={p.id} role="button" tabindex="0">
     <div class="thumb">
-      <img class="p1" alt={p.title} loading="lazy" src={cardImage(p)} />
-      {cardSecondary(p) && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={cardSecondary(p)} />}
+      <img class="p1" alt={p.title} loading="lazy" src={cardImage(p)} srcset={p.card?.srcset} sizes={p.card?.sizes} />
+      {cardSecondary(p) && <img class="p2" alt="" aria-hidden="true" loading="lazy" src={cardSecondary(p)} srcset={p.card?.secondarySrcset} sizes={p.card?.sizes} />}
     </div>
     <figcaption>
       <span class="pnum">{pad(i + 1)}</span>
@@ -36,6 +36,7 @@ const { p, i } = Astro.props;
         <div class="gx-track">
         {p.sheets.map((sheet, j) => {
           const dims = sheetDims(sheet);
+          const responsive = typeof sheet === 'object' ? sheet : undefined;
           return (
             <figure class="gx-page">
               <img
@@ -44,6 +45,8 @@ const { p, i } = Astro.props;
                 height={dims.height}
                 loading="lazy"
                 src={sheetPath(p, sheet)}
+                srcset={responsive?.srcset}
+                sizes={responsive?.sizes}
                 width={dims.width}
               />
             </figure>

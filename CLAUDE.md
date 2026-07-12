@@ -341,7 +341,8 @@
 
 ## 기술 규칙
 - 스택: Astro + vanilla CSS + client 동작이 필요한 곳의 vanilla JavaScript.
-- React/Preact/Vue/Svelte, Tailwind, GSAP, CMS, UI 라이브러리 도입 금지 (2026-07-10 Astro 마이그레이션 세션에서 확정).
+- React/Preact/Vue/Svelte, Tailwind, GSAP, UI 라이브러리 도입 금지 (2026-07-10 Astro 마이그레이션 세션에서 확정).
+- 예외 — Sanity CMS: 2026-07-12 승인. Studio는 `studio/`에 격리(React는 studio 내부 전용), 사이트는 read-only `@sanity/client`로 `published` perspective만 정적 빌드 시 조회. 사이트 번들에 React·토큰 포함 금지.
 - 추가 프레임워크·번들러 도입은 합의 전 금지.
 - 외부 라이브러리는 추가 전에 반드시 물어본다.
 - 기본은 no-dependency (Astro core만 의존).

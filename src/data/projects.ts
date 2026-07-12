@@ -14,6 +14,20 @@ export interface Sheet {
   file: string;
   width: number;
   height: number;
+  /* Optional responsive delivery, populated by the Sanity adapter.
+     Registry sheets omit these and render exactly as before. */
+  srcset?: string;
+  sizes?: string;
+}
+
+/* Card image override, populated by the Sanity adapter (homepageThumbnail).
+   When absent, cards fall back to the first/second sheet as before. */
+export interface CardImage {
+  src: string;
+  srcset?: string;
+  sizes?: string;
+  secondary?: string;
+  secondarySrcset?: string;
 }
 
 export interface Project {
@@ -38,6 +52,7 @@ export interface Project {
      projects omit this and keep resolving against BASE unchanged. */
   base?: string;
   sheets: (string | Sheet)[];
+  card?: CardImage;
   video?: {
     title: string;
     youtubeId: string;
@@ -533,10 +548,14 @@ const sheetFile = (s: string | Sheet): string => (typeof s === "string" ? s : s.
 export const sheetDims = (s: string | Sheet): { width: number; height: number } =>
   typeof s === "string" ? { width: DEFAULT_SHEET_W, height: DEFAULT_SHEET_H } : { width: s.width, height: s.height };
 
-export const sheetPath = (p: Project, s: string | Sheet): string =>
-  `${p.base ?? BASE}/${p.folder}/${sheetFile(s)}`;
+export const sheetPath = (p: Project, s: string | Sheet): string => {
+  const file = sheetFile(s);
+  /* Absolute URLs (e.g. Sanity CDN assets from the CMS adapter) pass through. */
+  if (/^https?:\/\//.test(file)) return file;
+  return `${p.base ?? BASE}/${p.folder}/${file}`;
+};
 
-export const cardImage = (p: Project): string => sheetPath(p, p.sheets[0]);
+export const cardImage = (p: Project): string => p.card?.src ?? sheetPath(p, p.sheets[0]);
 
 export const cardSecondary = (p: Project): string | undefined =>
-  p.sheets[1] ? sheetPath(p, p.sheets[1]) : undefined;
+  p.card ? p.card.secondary : p.sheets[1] ? sheetPath(p, p.sheets[1]) : undefined;

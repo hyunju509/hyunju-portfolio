@@ -1,0 +1,128 @@
+---
+/*
+ * LOCAL CMS PILOT — Phase 2A migration index. Unlinked, noindex.
+ * Lists every project with its local-vs-Sanity comparison status.
+ */
+import { PROJECTS } from '../../../data/projects';
+import { sanityClient, sanityConfigured } from '../../../lib/sanity/client';
+import { ALL_PROJECTS, HOMEPAGE_SETTINGS } from '../../../lib/sanity/queries';
+import type { SanityProject, SanityHomepageSettings } from '../../../lib/sanity/types';
+import { buildProjectChecks, findPlacement } from '../../../lib/sanity/compare';
+
+/* Development-only tooling: production builds emit a stub with no content. */
+const DEV = import.meta.env.DEV;
+
+let cmsProjects: SanityProject[] = [];
+let settings: SanityHomepageSettings | null = null;
+let cmsError: string | null = null;
+if (!DEV) {
+  cmsError = 'CMS preview is available in development only.';
+} else if (!sanityConfigured) {
+  cmsError = 'Sanity is not configured — set SANITY_PROJECT_ID in .env and rebuild.';
+} else {
+  try {
+    [cmsProjects, settings] = await Promise.all([
+      sanityClient.fetch<SanityProject[]>(ALL_PROJECTS),
+      sanityClient.fetch<SanityHomepageSettings | null>(HOMEPAGE_SETTINGS),
+    ]);
+  } catch (e) {
+    cmsError = `Sanity query failed: ${e instanceof Error ? e.message : String(e)}`;
+  }
+}
+
+const bySlug = new Map(cmsProjects.map((p) => [p.slug, p]));
+const rows = PROJECTS.map((local) => {
+  const cms = bySlug.get(local.slug) ?? null;
+  const placement = findPlacement(settings, local.slug);
+  const checks = buildProjectChecks(local, cms, placement);
+  const failed = checks.filter((c) => !c.pass);
+  return { local, cms, placement, total: checks.length, failed };
+});
+
+const tierA = PROJECTS.filter((p) => p.tier === 'A');
+const tierB = PROJECTS.filter((p) => p.tier === 'B');
+const registrySlugs = new Set(PROJECTS.map((p) => p.slug));
+const extraCmsDocs = cmsProjects.filter((p) => !registrySlugs.has(p.slug));
+const selSlugs = (settings?.selectedWorks ?? []).map((r) => r?.slug);
+const moreSlugs = (settings?.moreWorks ?? []).map((r) => r?.slug);
+const crossDup = selSlugs.filter((s) => moreSlugs.includes(s));
+const unresolvedRefs = [...(settings?.selectedWorks ?? []), ...(settings?.moreWorks ?? [])].filter((r) => !r);
+
+const globalChecks = [
+  { label: 'Registry project count', pass: rows.length === 15, detail: `${rows.length}` },
+  { label: 'CMS project documents', pass: cmsProjects.length === PROJECTS.length, detail: `${cmsProjects.length} (expected ${PROJECTS.length})` },
+  { label: 'No extra CMS projects outside registry', pass: extraCmsDocs.length === 0, detail: extraCmsDocs.map((p) => p.slug).join(', ') || 'none' },
+  { label: 'Selected Works membership + order', pass: JSON.stringify(selSlugs) === JSON.stringify(tierA.map((p) => p.slug)), detail: selSlugs.join(' → ') },
+  { label: 'More Work membership + order', pass: JSON.stringify(moreSlugs) === JSON.stringify(tierB.map((p) => p.slug)), detail: moreSlugs.join(' → ') },
+  { label: 'No project in both sections', pass: crossDup.length === 0, detail: crossDup.join(', ') || 'none' },
+  { label: 'All homepage references resolve', pass: unresolvedRefs.length === 0, detail: `${unresolvedRefs.length} unresolved` },
+  { label: 'Every project placed in a section', pass: rows.every((r) => r.placement !== null), detail: rows.filter((r) => !r.placement).map((r) => r.local.slug).join(', ') || 'all placed' },
+];
+const allPass = !cmsError && rows.every((r) => r.failed.length === 0) && globalChecks.every((c) => c.pass);
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<meta content="noindex, nofollow" name="robots" />
+<title>CMS Pilot — Projects migration index</title>
+</head>
+<body>
+{!DEV && <p style="padding:24px;font:14px system-ui">CMS preview is available in development only.</p>}
+{DEV && <div class="wrap">
+  <p class="banner">Local CMS pilot — Phase 2A migration. Not part of the public site.</p>
+  <h1>Projects — Local registry vs Sanity CMS {allPass ? '· ALL PASS' : cmsError ? '' : '· MISMATCHES FOUND'}</h1>
+  {cmsError && <p class="err">{cmsError}</p>}
+
+  <section>
+    <h2>Global checks</h2>
+    <table>
+      <thead><tr><th>Check</th><th>Result</th><th>Detail</th></tr></thead>
+      <tbody>
+        {globalChecks.map((c) => (
+          <tr class={c.pass ? 'pass' : 'fail'}><td>{c.label}</td><td>{c.pass ? 'PASS' : 'FAIL'}</td><td class="detail">{c.detail}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Per-project status</h2>
+    <table>
+      <thead><tr><th>#</th><th>Project</th><th>Section</th><th>Images</th><th>Checks</th><th>Status</th></tr></thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr class={r.failed.length === 0 ? 'pass' : 'fail'}>
+            <td>{String(i + 1).padStart(2, '0')}</td>
+            <td><a href={`/cms-preview/projects/${r.local.slug}`}>{r.local.title}</a></td>
+            <td>{r.placement ? `${r.placement.section}[${r.placement.index}]` : 'NOT PLACED'}</td>
+            <td>{(r.cms?.gallery ?? []).length}/{r.local.sheets.length}</td>
+            <td>{r.total - r.failed.length}/{r.total}</td>
+            <td>{r.failed.length === 0 ? 'PASS' : `FAIL: ${r.failed.map((f) => f.label).join('; ')}`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+</div>}
+
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.6 system-ui, sans-serif; color: #111; background: #fafaf8; }
+  .wrap { max-width: 1300px; margin: 0 auto; padding: 24px 3vw 80px; }
+  .banner { background: #111; color: #fff; padding: 8px 14px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; display: inline-block; }
+  h1 { font-size: 22px; margin: 18px 0 26px; }
+  h2 { font-size: 15px; margin: 28px 0 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr.pass td:last-child, tr.pass td:nth-child(2):first-of-type { color: inherit; }
+  tr.pass { background: transparent; }
+  tr.fail { background: #fdecea; }
+  tr.fail td { color: #b42318; }
+  .detail { overflow-wrap: anywhere; }
+  .err { color: #b42318; font-weight: 600; }
+  a { color: inherit; }
+</style>
+</body>
+</html>
