@@ -32,7 +32,9 @@ const { p, i } = Astro.props;
       <button class="gx-close" aria-label={`Close ${p.title}`}>&larr; Close</button>
     </aside>
     <div class="gx-field">
-      <div class="gx-media">
+      {/* --gx01: image 01's natural ratio fixes this project's stage height;
+          later images contain-fit inside it (see .gx-media in global.css). */}
+      <div class="gx-media" style={`--gx01:${sheetDims(p.sheets[0]).width}/${sheetDims(p.sheets[0]).height}`}>
         <div class="gx-track">
         {p.sheets.map((sheet, j) => {
           const dims = sheetDims(sheet);

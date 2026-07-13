@@ -309,11 +309,20 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 .gx-close{margin-top:24px;font-size:12.5px;letter-spacing:.04em;color:var(--gray2);}
 .gx-close:hover{color:var(--ink);}
 .gx-close:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
-.gx-media{position:relative;overflow:hidden;}
-.gx-track{display:flex;gap:2.5%;transition:transform 480ms var(--ease);will-change:transform;}
+/* Fixed per-project stage: image 01's natural ratio (--gx01, set inline by
+   GridItem) determines the expanded media height once per project; every
+   later image contain-fits inside that same height, so nothing around the
+   stage ever moves while navigating. Responsive by construction (pure CSS
+   aspect-ratio recomputes only with width/breakpoint changes), with a
+   viewport-safe cap so tall first images never dominate the screen. */
+.gx-media{position:relative;overflow:hidden;aspect-ratio:var(--gx01,3/2);max-height:min(78vh,900px);}
+.gx-track{display:flex;gap:2.5%;height:100%;transition:transform 480ms var(--ease);will-change:transform;}
 .gx-track.gx-noanim{transition:none;}
-.gx-page{flex:0 0 auto;width:90%;margin:0;}
-.gx-page img{display:block;width:100%;height:auto;background:#fff;border:1px solid rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.03),0 14px 30px -20px rgba(0,0,0,.18);}
+.gx-page{flex:0 0 auto;width:90%;height:100%;margin:0;display:flex;align-items:center;justify-content:center;}
+/* width/height:auto with both max caps = uncropped contain fit whose element
+   box hugs the visible pixels, keeping the border and shadow tight around
+   portrait, square, and extra-wide images alike. No stretching, no crop. */
+.gx-page img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;background:#fff;border:1px solid rgba(0,0,0,.05);box-shadow:0 1px 1px rgba(0,0,0,.03),0 14px 30px -20px rgba(0,0,0,.18);}
 /* left/right halves, matching the custom navigation cursor's two states */
 .gx-zone{position:absolute;top:0;bottom:0;z-index:2;background:transparent;}
 .gx-prev{left:0;width:50%;}
@@ -358,9 +367,9 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 
 /* Selected Works expanded: the media frame is ~two collapsed-card widths
    (cards are (100% - 2 gaps)/3 of the row), centered with its rail in the
-   full grid row instead of stretching nearly full-width. Deliberately NO
-   aspect-ratio clamp here — Selected Works imagery keeps its natural,
-   uncropped proportions (height:auto), unlike More Work's fixed frame.
+   full grid row instead of stretching nearly full-width. The stage height
+   is fixed per project by image 01 (see .gx-media above); images stay
+   uncropped and aspect-correct inside it.
    Size hierarchy: SW expanded (2 of 3 cols) > More Work expanded (2 of 5
    cols) > homepage Observations thumbnails. */
 .selected-grid .gx{grid-template-columns:190px calc((100% - 48px)/3*2);justify-content:center;}
@@ -373,15 +382,11 @@ figcaption .ct{font-weight:500;letter-spacing:.01em;}
 
 /* More Work expanded refinements: the media frame is ~two collapsed-card
    widths (cards are (100% - 4 gaps)/5 of the row), centered with its rail
-   in the full grid row rather than stretching to the homepage width; and
-   every image is clipped by ONE fixed 4:3 frame (the collapsed thumbnail
-   ratio) via object-fit, so changing images never resizes the frame or
-   shifts the page. Source files are untouched — cropping is visual only. */
+   in the full grid row rather than stretching to the homepage width. The
+   stage height is fixed per project by image 01 (shared .gx-media rule) —
+   expanded images are uncropped and contain-fit like Selected Works, while
+   the collapsed 4:3 card crop is untouched. */
 .more-work-grid .gx{grid-template-columns:190px calc((100% - 64px)/5*2);justify-content:center;}
-.more-work-grid .gx-media{aspect-ratio:4/3;}
-.more-work-grid .gx-track{height:100%;}
-.more-work-grid .gx-page{width:100%;height:100%;}
-.more-work-grid .gx-page img{width:100%;height:100%;object-fit:cover;object-position:center;}
 @media (max-width:1024px){
   .more-work-grid .gx{grid-template-columns:158px minmax(0,1fr);justify-content:stretch;}
 }
