@@ -36,8 +36,14 @@ _observations-organized/
 # writing workflow
 _writing-inbox/
 
+# sanity image replacement workflow (originals + derived uploads + rollback)
+_sanity-replacement/
+
 # vercel project link + local env pulls
 .vercel
 .env*
 !.env.example
 !studio/.env.example
+
+# Local Sanity replacement assets
+_sanity-replacement/

@@ -40,12 +40,12 @@ const SHEET_WIDTHS = [720, 960, 1280, 1600, 2000];
 const CARD_WIDTHS = [480, 720, 960];
 const MAX_WIDTH = 2000;
 const CARD_SIZES = {
-  A: "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 31vw",
-  B: "(max-width: 640px) 46vw, (max-width: 1024px) 31vw, 19vw",
+  A: "(max-width: 640px) 94vw, (max-width: 1024px) 46vw, 27vw",
+  B: "(max-width: 640px) 46vw, (max-width: 1024px) 31vw, 17vw",
 } as const;
 const SHEET_SIZES = {
-  A: "(max-width: 640px) 94vw, (max-width: 1024px) 86vw, 62vw",
-  B: "(max-width: 640px) 94vw, (max-width: 1024px) 86vw, 38vw",
+  A: "(max-width: 640px) 94vw, (max-width: 1024px) 86vw, 54vw",
+  B: "(max-width: 640px) 94vw, (max-width: 1024px) 86vw, 33vw",
 } as const;
 
 const sized = (image: SanityImageWithAsset, w: number): string =>

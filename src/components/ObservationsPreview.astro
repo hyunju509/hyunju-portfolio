@@ -48,6 +48,14 @@ const { places, studies, intro, placesLabel, imageStudiesLabel } = await getFeat
   border-top: 1px solid var(--hair);
 }
 
+/* Match the narrowed homepage content width (.work) on desktop/laptop. */
+@media (min-width: 1025px) {
+  .home-obs {
+    padding-left: 8.6vw;
+    padding-right: 8.6vw;
+  }
+}
+
 .home-obs-head {
   margin-bottom: 20px;
 }
