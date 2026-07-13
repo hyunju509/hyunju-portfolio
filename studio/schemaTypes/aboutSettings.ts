@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {DropImageInput} from '../components/DropImageInput'
 
 /** Singleton: all editable About-page content. Factual accuracy is
  *  critical — do not invent employment, licenses, dates, or roles. */
@@ -106,7 +107,13 @@ export const aboutSettings = defineType({
         },
       ],
     }),
-    defineField({name: 'portrait', title: 'Portrait', type: 'image', options: {hotspot: true}}),
+    defineField({
+      name: 'portrait',
+      title: 'Portrait',
+      type: 'image',
+      options: {hotspot: true},
+      components: {input: DropImageInput},
+    }),
     defineField({
       name: 'cvUrl',
       title: 'CV download link',

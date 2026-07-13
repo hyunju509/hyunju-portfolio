@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {DropImageInput} from '../components/DropImageInput'
 
 /**
  * One Writing article (research essay, data study, field notes).
@@ -58,6 +59,7 @@ export const writing = defineType({
       title: 'Cover image',
       type: 'image',
       options: {hotspot: true},
+      components: {input: DropImageInput},
     }),
     defineField({
       name: 'coverImageAlt',
@@ -169,7 +171,12 @@ export const writing = defineType({
     }),
     defineField({name: 'seoTitle', title: 'SEO title', type: 'string'}),
     defineField({name: 'seoDescription', title: 'SEO description', type: 'text', rows: 3}),
-    defineField({name: 'socialImage', title: 'Social image', type: 'image'}),
+    defineField({
+      name: 'socialImage',
+      title: 'Social image',
+      type: 'image',
+      components: {input: DropImageInput},
+    }),
     defineField({
       name: 'note',
       title: 'Internal note',

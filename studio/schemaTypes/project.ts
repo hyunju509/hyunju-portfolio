@@ -1,4 +1,6 @@
 import {defineField, defineType} from 'sanity'
+import {BulkImageArrayInput} from '../components/BulkImageArrayInput'
+import {DropImageInput} from '../components/DropImageInput'
 
 export const project = defineType({
   name: 'project',
@@ -154,6 +156,7 @@ export const project = defineType({
       title: 'Homepage thumbnail',
       type: 'image',
       options: {hotspot: true},
+      components: {input: DropImageInput},
       description:
         'Card image on the homepage. Required for any project placed in Homepage Order. The hotspot controls which part stays visible when the card crops it.',
       validation: (rule) =>
@@ -176,8 +179,10 @@ export const project = defineType({
       title: 'Gallery',
       type: 'array',
       of: [{type: 'galleryImage'}],
+      options: {layout: 'grid'},
+      components: {input: BulkImageArrayInput},
       description:
-        'Project images in display order — drag items to reorder. Each image needs alt text.',
+        'Project images in display order — drag tiles to reorder, click a tile to edit alt/caption. Drop multiple files above to bulk-upload.',
     }),
     defineField({
       name: 'video',

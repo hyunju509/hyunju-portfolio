@@ -3,6 +3,7 @@ import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
+import {useAsThumbnailAction} from './components/useAsThumbnailAction'
 
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID!
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
@@ -29,10 +30,14 @@ export default defineConfig({
       creationContext.type === 'global'
         ? prev.filter((tmpl) => !SINGLETONS.includes(tmpl.templateId))
         : prev,
-    /* Singletons cannot be duplicated or deleted. */
-    actions: (prev, {schemaType}) =>
-      SINGLETONS.includes(schemaType)
-        ? prev.filter(({action}) => action !== 'duplicate' && action !== 'delete')
-        : prev,
+    /* Singletons cannot be duplicated or deleted. Projects gain the
+       "use gallery image as thumbnail" convenience action. */
+    actions: (prev, {schemaType}) => {
+      if (SINGLETONS.includes(schemaType)) {
+        return prev.filter(({action}) => action !== 'duplicate' && action !== 'delete')
+      }
+      if (schemaType === 'project') return [...prev, useAsThumbnailAction]
+      return prev
+    },
   },
 })

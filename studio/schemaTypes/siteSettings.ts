@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {DropImageInput} from '../components/DropImageInput'
 
 const featuredValidation = (label: string) => (rule: any) =>
   rule
@@ -100,6 +101,7 @@ export const siteSettings = defineType({
       type: 'image',
       group: 'seo',
       description: 'Open Graph image (1200×630).',
+      components: {input: DropImageInput},
     }),
     defineField({
       name: 'defaultSocialImageAlt',

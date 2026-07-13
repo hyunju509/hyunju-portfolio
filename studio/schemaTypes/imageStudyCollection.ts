@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {BulkImageArrayInput} from '../components/BulkImageArrayInput'
 
 /** One Image Studies category (Material Experiments / Spatial Images).
  *  These are AI-assisted studies — the disclosure must stay visible. */
@@ -65,7 +66,9 @@ export const imageStudyCollection = defineType({
       title: 'Images',
       type: 'array',
       of: [{type: 'obsImage'}],
-      description: 'Display order — drag to reorder.',
+      options: {layout: 'grid'},
+      components: {input: BulkImageArrayInput},
+      description: 'Display order — drag tiles to reorder. Drop multiple files above to bulk-upload.',
     }),
     defineField({
       name: 'note',

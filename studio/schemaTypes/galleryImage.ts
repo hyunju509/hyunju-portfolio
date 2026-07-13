@@ -50,5 +50,15 @@ export const galleryImage = defineType({
   ],
   preview: {
     select: {media: 'image', title: 'alt', subtitle: 'caption'},
+    prepare({media, title, subtitle}) {
+      /* Bulk uploads and imports write temporary alts like
+         "Fluid Terrain, image 03" — flag them until reviewed. */
+      const temp = /, (project )?image \d+$/.test(title ?? '')
+      return {
+        media,
+        title: temp ? `⚠ ${title}` : title,
+        subtitle: temp ? 'Temporary alt — review' : subtitle,
+      }
+    },
   },
 })

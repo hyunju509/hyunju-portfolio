@@ -52,5 +52,15 @@ export const obsImage = defineType({
   ],
   preview: {
     select: {media: 'image', title: 'alt', subtitle: 'sequenceLabel'},
+    prepare({media, title, subtitle}) {
+      /* Bulk uploads write temporary alts like "Japan, image 05" —
+         flag them until reviewed. */
+      const temp = /, image \d+$/.test(title ?? '')
+      return {
+        media,
+        title: temp ? `⚠ ${title}` : title,
+        subtitle: temp ? 'Temporary alt — review' : subtitle,
+      }
+    },
   },
 })

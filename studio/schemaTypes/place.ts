@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {BulkImageArrayInput} from '../components/BulkImageArrayInput'
 
 /** One Observations location (Places). Gallery order is authoritative. */
 export const place = defineType({
@@ -45,7 +46,10 @@ export const place = defineType({
       title: 'Photographs',
       type: 'array',
       of: [{type: 'obsImage'}],
-      description: 'Display order — drag to reorder. A location may be empty (filter still appears).',
+      options: {layout: 'grid'},
+      components: {input: BulkImageArrayInput},
+      description:
+        'Display order — drag tiles to reorder. Drop multiple files above to bulk-upload. A location may be empty (filter still appears).',
     }),
     defineField({
       name: 'note',

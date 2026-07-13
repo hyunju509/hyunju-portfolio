@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {DropImageInput} from '../components/DropImageInput'
 
 /** Singleton: the Book (PDF portfolio) source and metadata.
  *  The PDF.js viewer itself is code and stays unchanged. */
@@ -35,7 +36,13 @@ export const bookSettings = defineType({
           return true
         }),
     }),
-    defineField({name: 'coverImage', title: 'Cover image', type: 'image', options: {hotspot: true}}),
+    defineField({
+      name: 'coverImage',
+      title: 'Cover image',
+      type: 'image',
+      options: {hotspot: true},
+      components: {input: DropImageInput},
+    }),
     defineField({
       name: 'downloadFilename',
       title: 'Download filename',
