@@ -36,9 +36,10 @@ a{color:inherit;}
 .work{padding:6vh 5vw 4vh;}
 /* Desktop/laptop: narrow the homepage content to 92% of its previous width
    (90vw -> 82.8vw), margins grow evenly. Tablet/mobile keep 5vw.
+   .hero shares this so the intro row aligns with the Selected Works grid.
    The homepage Observations preview mirrors this in its component style. */
 @media (min-width:1025px){
-  .work{padding-left:8.6vw;padding-right:8.6vw;}
+  .work,.hero{padding-left:8.6vw;padding-right:8.6vw;}
 }
 .grid{display:flex;align-items:stretch;gap:8px;}
 .col{display:flex;flex-direction:column;gap:26px;min-width:0;}
